@@ -9,62 +9,112 @@
 <body>
 
     <header>
-        <div class="logo">SAVORAIN</div>
-        <p class="subtitle">Custom Instrumentals & Leases — DM or Buy Direct</p>
+        <div class="logo">SavoRain</div>
+        <p class="subtitle">Instrumentals & Leases — DM or Inquire Direct</p>
     </header>
 
     <main class="catalog-container">
-        <table class="beat-table">
-            <thead>
-                <tr>
-                    <th>Beat Name</th>
-                    <th>Audio Preview</th>
-                    <th>Key</th>
-                    <th>BPM</th>
-                    <th>Genre</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- BEAT ROW 1 -->
-                <tr>
-                    <td class="beat-title">Midnight Run</td>
-                    <td>
-                        <audio controls preload="none">
-                            <source src="audio/midnight-run-tagged.mp3" type="audio/mpeg">
-                            Your browser does not support the audio element.
-                        </audio>
-                    </td>
-                    <td>C# Min</td>
-                    <td>140</td>
-                    <td>Trap</td>
-                    <td><span class="status available">Available</span></td>
-                    <td><a href="YOUR_PAYPAL_LINK_HERE" target="_blank" class="buy-btn">Buy License</a></td>
-                </tr>
+        
+        <!-- FILTER BAR -->
+        <div class="filter-bar">
+            <label for="genreFilter">Filter Genre:</label>
+            <select id="genreFilter" onchange="filterTable()">
+                <option value="all">All Genres</option>
+                <option value="Trap">Trap</option>
+                <option value="R&B">R&B</option>
+            </select>
+        </div>
 
-                <!-- BEAT ROW 2 (Example of an exclusive sold beat) -->
-                <tr>
-                    <td class="beat-title">Ethereal Vibe</td>
-                    <td>
-                        <audio controls preload="none">
-                            <source src="audio/ethereal-vibe-tagged.mp3" type="audio/mpeg">
-                            Your browser does not support the audio element.
-                        </audio>
-                    </td>
-                    <td>F Maj</td>
-                    <td>125</td>
-                    <td>R&B</td>
-                    <td><span class="status sold">Exclusive Sold</span></td>
-                    <td><span class="sold-text">Sold Out</span></td>
-                </tr>
-            </tbody>
-        </table>
+        <!-- COLLAPSIBLE FOLDER 1: TRAP BEATS -->
+        <details open class="beat-folder">
+            <summary>🔥 Trap Beats Collection</summary>
+            <table class="beat-table">
+                <thead>
+                    <tr>
+                        <th>Beat Name</th>
+                        <th>Audio Preview</th>
+                        <th>Key</th>
+                        <th>BPM</th>
+                        <th>Genre</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-genre="Trap">
+                        <td class="beat-title">Midnight Run</td>
+                        <td>
+                            <audio controls controlsList="nodownload" preload="none">
+                                <source src="audio/midnight-run-tagged.mp3" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                        </td>
+                        <td>C# Min</td>
+                        <td>140</td>
+                        <td>Trap</td>
+                        <td><span class="status available">Available</span></td>
+                        <td><a href="mailto:savorrain@gmail.com?subject=Inquiry%20about%20Beat:%20Midnight%20Run" class="inquire-btn">Inquire</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </details>
+
+        <!-- COLLAPSIBLE FOLDER 2: R&B BEATS -->
+        <details open class="beat-folder">
+            <summary>🌙 R&B & Soul Collection</summary>
+            <table class="beat-table">
+                <thead>
+                    <tr>
+                        <th>Beat Name</th>
+                        <th>Audio Preview</th>
+                        <th>Key</th>
+                        <th>BPM</th>
+                        <th>Genre</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-genre="R&B">
+                        <td class="beat-title">Ethereal Vibe</td>
+                        <td>
+                            <audio controls controlsList="nodownload" preload="none">
+                                <source src="audio/ethereal-vibe-tagged.mp3" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                        </td>
+                        <td>F Maj</td>
+                        <td>125</td>
+                        <td>R&B</td>
+                        <td><span class="status sold">Exclusive Sold</span></td>
+                        <td><span class="sold-text">Sold Out</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </details>
+
     </main>
 
     <footer>
         <p>&copy; 2026 SavoRain. All rights reserved. Master rights retained by producer.</p>
     </footer>
+
+    <!-- SIMPLE JAVASCRIPT FOR FILTERING -->
+    <script>
+        function filterTable() {
+            const selectedGenre = document.getElementById('genreFilter').value;
+            const rows = document.querySelectorAll('.beat-table tbody tr');
+
+            rows.forEach(row => {
+                const genre = row.getAttribute('data-genre');
+                if (selectedGenre === 'all' || genre === selectedGenre) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    </script>
 
 </body>
 </html>
