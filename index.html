@@ -3,118 +3,503 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SavoRain | Instrumental Catalog</title>
+    <title>SavoRain | Official Catalog & Sound Vault</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-    <header>
+    <!-- TOP NAVIGATION / HEADER -->
+    <header class="header">
         <div class="logo">SavoRain</div>
-        <p class="subtitle">Instrumentals & Leases — DM or Inquire Direct</p>
+        <div class="header-right">
+            <a href="mailto:savorainmusic@gmail.com" class="nav-contact">savorainmusic@gmail.com</a>
+            
+            <!-- Instagram Link -->
+            <a href="https://instagram.com/savorainmusic" target="_blank" rel="noopener noreferrer" class="social-link" title="Instagram">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                </svg>
+                <span>Instagram</span>
+            </a>
+
+            <!-- TikTok Link -->
+            <a href="https://tiktok.com/@savorainmusic" target="_blank" rel="noopener noreferrer" class="social-link" title="TikTok">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+                </svg>
+                <span>TikTok</span>
+            </a>
+        </div>
     </header>
 
-    <main class="catalog-container">
+    <main class="main-wrapper">
         
-        <!-- FILTER BAR -->
-        <div class="filter-bar">
-            <label for="genreFilter">Filter Genre:</label>
-            <select id="genreFilter" onchange="filterTable()">
-                <option value="all">All Genres</option>
-                <option value="Trap">Trap</option>
-                <option value="R&B">R&B</option>
-            </select>
-        </div>
+        <!-- HERO / PRICING GUIDE ACTION -->
+        <section class="hero-section">
+            <button id="openGuideBtn" class="glow-button">Leasing / Purchase Guide</button>
+        </section>
 
-        <!-- COLLAPSIBLE FOLDER 1: TRAP BEATS -->
-        <details open class="beat-folder">
-            <summary>🔥 Trap Beats Collection</summary>
-            <table class="beat-table">
-                <thead>
-                    <tr>
-                        <th>Beat Name</th>
-                        <th>Audio Preview</th>
-                        <th>Key</th>
-                        <th>BPM</th>
-                        <th>Genre</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr data-genre="Trap">
-                        <td class="beat-title">Midnight Run</td>
-                        <td>
-                            <audio controls controlsList="nodownload" preload="none">
-                                <source src="audio/midnight-run-tagged.mp3" type="audio/mpeg">
-                                Your browser does not support the audio element.
-                            </audio>
-                        </td>
-                        <td>C# Min</td>
-                        <td>140</td>
-                        <td>Trap</td>
-                        <td><span class="status available">Available</span></td>
-                        <td><a href="mailto:savorrain@gmail.com?subject=Inquiry%20about%20Beat:%20Midnight%20Run" class="inquire-btn">Inquire</a></td>
-                    </tr>
-                </tbody>
-            </table>
-        </details>
+        <!-- FEATURED SHOWCASE BOXES -->
+        <section class="featured-section">
+            <h2 class="section-title">Featured</h2>
+            <div class="featured-grid">
+                
+                <!-- FEATURED ITEM 1 -->
+                <div class="featured-card" onclick="toggleFeaturedAudio('featAudio1', this)">
+                    <div class="featured-tag">FEATURED #1</div>
+                    <h3 class="featured-name">Midnight Eclipse</h3>
+                    <p class="featured-meta">140 BPM • C# Minor • Trap</p>
+                    <div class="play-indicator">
+                        <span class="pulse-icon">▶</span>
+                        <span class="status-label">Click to Play</span>
+                    </div>
+                    <!-- USER FILE LINK HERE -->
+                    <audio id="featAudio1" preload="none">
+                        <source src="audio/midnight-eclipse-tagged.mp3" type="audio/mpeg">
+                    </audio>
+                </div>
 
-        <!-- COLLAPSIBLE FOLDER 2: R&B BEATS -->
-        <details open class="beat-folder">
-            <summary>🌙 R&B & Soul Collection</summary>
-            <table class="beat-table">
-                <thead>
-                    <tr>
-                        <th>Beat Name</th>
-                        <th>Audio Preview</th>
-                        <th>Key</th>
-                        <th>BPM</th>
-                        <th>Genre</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr data-genre="R&B">
-                        <td class="beat-title">Ethereal Vibe</td>
-                        <td>
-                            <audio controls controlsList="nodownload" preload="none">
-                                <source src="audio/ethereal-vibe-tagged.mp3" type="audio/mpeg">
-                                Your browser does not support the audio element.
-                            </audio>
-                        </td>
-                        <td>F Maj</td>
-                        <td>125</td>
-                        <td>R&B</td>
-                        <td><span class="status sold">Exclusive Sold</span></td>
-                        <td><span class="sold-text">Sold Out</span></td>
-                    </tr>
-                </tbody>
-            </table>
-        </details>
+                <!-- FEATURED ITEM 2 -->
+                <div class="featured-card" onclick="toggleFeaturedAudio('featAudio2', this)">
+                    <div class="featured-tag">FEATURED #2</div>
+                    <h3 class="featured-name">Synthetic Souls</h3>
+                    <p class="featured-meta">128 BPM • F Major • R&B</p>
+                    <div class="play-indicator">
+                        <span class="pulse-icon">▶</span>
+                        <span class="status-label">Click to Play</span>
+                    </div>
+                    <!-- USER FILE LINK HERE -->
+                    <audio id="featAudio2" preload="none">
+                        <source src="audio/synthetic-souls-tagged.mp3" type="audio/mpeg">
+                    </audio>
+                </div>
+
+                <!-- FEATURED ITEM 3 -->
+                <div class="featured-card" onclick="toggleFeaturedAudio('featAudio3', this)">
+                    <div class="featured-tag">FEATURED #3</div>
+                    <h3 class="featured-name">Nebula Mirage</h3>
+                    <p class="featured-meta">160 BPM • D Minor • Drill</p>
+                    <div class="play-indicator">
+                        <span class="pulse-icon">▶</span>
+                        <span class="status-label">Click to Play</span>
+                    </div>
+                    <!-- USER FILE LINK HERE -->
+                    <audio id="featAudio3" preload="none">
+                        <source src="audio/nebula-mirage-tagged.mp3" type="audio/mpeg">
+                    </audio>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- CONTROLS: FILTER BAR (FOR INSTRUMENTALS & LOOPS) -->
+        <section class="filter-controls-container" id="filterContainer">
+            <div class="filters-card">
+                
+                <div class="filter-group">
+                    <label>Collection</label>
+                    <select id="collectionFilter" onchange="applyFilters()">
+                        <option value="all">All Collections</option>
+                        <!-- Options dynamically injected from Javascript array -->
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Genre</label>
+                    <select id="genreFilter" onchange="applyFilters()">
+                        <option value="all">All Genres</option>
+                        <option value="Trap">Trap</option>
+                        <option value="R&B">R&B</option>
+                        <option value="Drill">Drill</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Key</label>
+                    <select id="keyFilter" onchange="applyFilters()">
+                        <option value="all">All Keys</option>
+                        <option value="C# Min">C# Min</option>
+                        <option value="F Maj">F Maj</option>
+                        <option value="D Min">D Min</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Sort By Length</label>
+                    <select id="lengthSort" onchange="applyFilters()">
+                        <option value="default">Default Order</option>
+                        <option value="shortest">Shortest First</option>
+                        <option value="longest">Longest First</option>
+                    </select>
+                </div>
+
+                <div class="filter-group toggle-group">
+                    <label>Show Sold Beats</label>
+                    <label class="switch">
+                        <input type="checkbox" id="soldToggle" checked onchange="applyFilters()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TAB NAVIGATION -->
+        <section class="catalog-section">
+            <div class="tabs-nav">
+                <button class="tab-button active" onclick="switchTab('instrumentals', this)">Instrumentals</button>
+                <button class="tab-button" onclick="switchTab('loops', this)">Loops</button>
+                <button class="tab-button" onclick="switchTab('plugins', this)">Plugins</button>
+            </div>
+
+            <!-- TAB CONTAINER: INSTRUMENTALS -->
+            <div id="tab-instrumentals" class="tab-content active">
+                <div class="table-responsive">
+                    <table class="catalog-table" id="instrumentalsTable">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Audio Preview</th>
+                                <th>Key</th>
+                                <th>BPM</th>
+                                <th>Genre</th>
+                                <th>Collection</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="instrumentalsBody">
+                            
+                            <!-- 
+                              ROW 1 TEMPLATE:
+                              data-seconds: Duration in seconds for sorting
+                              data-collection: name of collection, or "null" if standalone
+                              data-status: "available" or "exclusive-sold"
+                            -->
+                            <tr data-genre="Trap" data-key="C# Min" data-bpm="140" data-collection="Vault Vol. 1" data-status="available" data-seconds="185">
+                                <td class="title-cell">Midnight Eclipse</td>
+                                <td>
+                                    <audio controls controlsList="nodownload noplaybackrate" preload="none" onplay="handleSingleAudioPlay(this)">
+                                        <source src="audio/midnight-eclipse-tagged.mp3" type="audio/mpeg">
+                                    </audio>
+                                </td>
+                                <td>C# Min</td>
+                                <td>140</td>
+                                <td><span class="tag">Trap</span></td>
+                                <td class="collection-cell">Vault Vol. 1</td>
+                                <td><span class="badge available">Available</span></td>
+                                <td><button class="action-btn inquire" onclick="openInquiryModal('Midnight Eclipse')">Inquire</button></td>
+                            </tr>
+
+                            <!-- ROW 2 TEMPLATE: EXCLUSIVE SOLD BEAT -->
+                            <tr data-genre="R&B" data-key="F Maj" data-bpm="128" data-collection="null" data-status="exclusive-sold" data-seconds="210">
+                                <td class="title-cell">Synthetic Souls</td>
+                                <td>
+                                    <audio controls controlsList="nodownload noplaybackrate" preload="none" onplay="handleSingleAudioPlay(this)">
+                                        <source src="audio/synthetic-souls-tagged.mp3" type="audio/mpeg">
+                                    </audio>
+                                </td>
+                                <td>F Maj</td>
+                                <td>128</td>
+                                <td><span class="tag">R&B</span></td>
+                                <td class="collection-cell">—</td>
+                                <td><span class="badge sold">Exclusive Sold</span></td>
+                                <td><button class="action-btn sold" disabled>Sold Out</button></td>
+                            </tr>
+
+                            <!-- ROW 3 TEMPLATE -->
+                            <tr data-genre="Drill" data-key="D Min" data-bpm="160" data-collection="Vault Vol. 1" data-status="available" data-seconds="160">
+                                <td class="title-cell">Nebula Mirage</td>
+                                <td>
+                                    <audio controls controlsList="nodownload noplaybackrate" preload="none" onplay="handleSingleAudioPlay(this)">
+                                        <source src="audio/nebula-mirage-tagged.mp3" type="audio/mpeg">
+                                    </audio>
+                                </td>
+                                <td>D Min</td>
+                                <td>160</td>
+                                <td><span class="tag">Drill</span></td>
+                                <td class="collection-cell">Vault Vol. 1</td>
+                                <td><span class="badge available">Available</span></td>
+                                <td><button class="action-btn inquire" onclick="openInquiryModal('Nebula Mirage')">Inquire</button></td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB CONTAINER: LOOPS -->
+            <div id="tab-loops" class="tab-content">
+                <div class="empty-state">
+                    <p>Nothing here yet</p>
+                </div>
+            </div>
+
+            <!-- TAB CONTAINER: PLUGINS -->
+            <div id="tab-plugins" class="tab-content">
+                <div class="empty-state">
+                    <p>Nothing here yet</p>
+                </div>
+            </div>
+
+        </section>
 
     </main>
 
-    <footer>
+    <!-- FOOTER -->
+    <footer class="footer">
         <p>&copy; 2026 SavoRain. All rights reserved. Master rights retained by producer.</p>
     </footer>
 
-    <!-- SIMPLE JAVASCRIPT FOR FILTERING -->
-    <script>
-        function filterTable() {
-            const selectedGenre = document.getElementById('genreFilter').value;
-            const rows = document.querySelectorAll('.beat-table tbody tr');
+    <!-- MODAL: LEASING & PURCHASE GUIDE (EXACT PRICING REFERENCE TABLE) -->
+    <div id="guideModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div>
+                    <h2>SavoRain Customer License Agreement</h2>
+                    <p class="modal-subtitle">Instrumental Pricing Reference -</p>
+                </div>
+                <button class="modal-close-btn" onclick="closeGuideModal()">&times;</button>
+            </div>
+            
+            <div class="table-responsive modal-table-wrap">
+                <table class="reference-table">
+                    <thead>
+                        <tr>
+                            <th>Tier</th>
+                            <th>Price</th>
+                            <th>Deliverables</th>
+                            <th>Streams/Limits</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Basic Lease</strong></td>
+                            <td>$30–$50</td>
+                            <td>High Quality Audio File (wav)</td>
+                            <td>Up to 50,000 streams</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Advanced Lease</strong></td>
+                            <td>$50–$70</td>
+                            <td>High Quality Audio File (wav)</td>
+                            <td>Up to 250,000 streams</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Trackout/Stems</strong></td>
+                            <td>(Additional $50)</td>
+                            <td>Stem Tracks</td>
+                            <td>Up to 500,000 streams</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Exclusive Rights</strong></td>
+                            <td>$300–$1,000+</td>
+                            <td>All Files + Ownership</td>
+                            <td>Full Master Ownership</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
+    <!-- MODAL: INQUIRY POPUP -->
+    <div id="inquiryModal" class="modal-overlay">
+        <div class="modal-card compact">
+            <div class="modal-header">
+                <h3 id="inquiryTrackTitle">Inquire About Instrumental</h3>
+                <button class="modal-close-btn" onclick="closeInquiryModal()">&times;</button>
+            </div>
+            <div class="modal-body-content">
+                <p>Please email <a href="mailto:savorainmusic@gmail.com" class="inquiry-link">savorainmusic@gmail.com</a> or direct message <a href="https://instagram.com/savorainmusic" target="_blank" class="inquiry-link">@savorainmusic</a> on Instagram or <a href="https://tiktok.com/@savorainmusic" target="_blank" class="inquiry-link">TikTok</a> to discuss leasing or purchase.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC (INLINE FOR SIMPLICITY) -->
+    <script>
+        /* -------------------------------------------------------------
+           COLLECTIONS CONFIGURATION
+           Add any new collection names here to populate the dropdown.
+        ------------------------------------------------------------- */
+        const availableCollections = ["Vault Vol. 1", "Ethereal Series", "Midnight Chronicles"];
+
+        // Populate collection filter dropdown automatically on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const dropdown = document.getElementById('collectionFilter');
+            availableCollections.forEach(col => {
+                const opt = document.createElement('option');
+                opt.value = col;
+                opt.textContent = col;
+                dropdown.appendChild(opt);
+            });
+            cacheOriginalRowOrder();
+        });
+
+        /* -------------------------------------------------------------
+           TAB SWITCHING LOGIC
+        ------------------------------------------------------------- */
+        function switchTab(tabName, clickedBtn) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            clickedBtn.classList.add('active');
+
+            // Hide filter bar for Plugins tab
+            const filterContainer = document.getElementById('filterContainer');
+            if (tabName === 'plugins') {
+                filterContainer.style.display = 'none';
+            } else {
+                filterContainer.style.display = 'block';
+            }
+        }
+
+        /* -------------------------------------------------------------
+           ROW SORTING & FILTER LOGIC
+        ------------------------------------------------------------- */
+        let originalRows = [];
+
+        function cacheOriginalRowOrder() {
+            const tbody = document.getElementById('instrumentalsBody');
+            originalRows = Array.from(tbody.querySelectorAll('tr'));
+        }
+
+        function applyFilters() {
+            const genre = document.getElementById('genreFilter').value;
+            const key = document.getElementById('keyFilter').value;
+            const collection = document.getElementById('collectionFilter').value;
+            const showSold = document.getElementById('soldToggle').checked;
+            const lengthSort = document.getElementById('lengthSort').value;
+            const tbody = document.getElementById('instrumentalsBody');
+
+            let rows = [...originalRows];
+
+            // 1. Filter rows
             rows.forEach(row => {
-                const genre = row.getAttribute('data-genre');
-                if (selectedGenre === 'all' || genre === selectedGenre) {
+                const rowGenre = row.getAttribute('data-genre');
+                const rowKey = row.getAttribute('data-key');
+                const rowCol = row.getAttribute('data-collection');
+                const rowStatus = row.getAttribute('data-status');
+
+                let matchesGenre = (genre === 'all' || rowGenre === genre);
+                let matchesKey = (key === 'all' || rowKey === key);
+                
+                // Collection Logic: If a specific collection is selected, null/empty collections are hidden
+                let matchesCollection = true;
+                if (collection !== 'all') {
+                    matchesCollection = (rowCol !== null && rowCol !== 'null' && rowCol === collection);
+                }
+
+                // Exclusive Sold filter toggle
+                let matchesSold = true;
+                if (!showSold && rowStatus === 'exclusive-sold') {
+                    matchesSold = false;
+                }
+
+                if (matchesGenre && matchesKey && matchesCollection && matchesSold) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
                 }
             });
-        }
-    </script>
 
+            // 2. Sort rows by duration length
+            if (lengthSort === 'shortest') {
+                rows.sort((a, b) => parseInt(a.getAttribute('data-seconds')) - parseInt(b.getAttribute('data-seconds')));
+            } else if (lengthSort === 'longest') {
+                rows.sort((a, b) => parseInt(b.getAttribute('data-seconds')) - parseInt(a.getAttribute('data-seconds')));
+            }
+
+            // Re-append sorted rows to tbody
+            rows.forEach(r => tbody.appendChild(r));
+        }
+
+        /* -------------------------------------------------------------
+           AUDIO PLAYER SINGLE-PLAYBACK HANDLER
+        ------------------------------------------------------------- */
+        let currentPlayingAudio = null;
+
+        function handleSingleAudioPlay(playingElement) {
+            if (currentPlayingAudio && currentPlayingAudio !== playingElement) {
+                currentPlayingAudio.pause();
+            }
+            currentPlayingAudio = playingElement;
+        }
+
+        function toggleFeaturedAudio(audioId, cardElement) {
+            const audio = document.getElementById(audioId);
+            const statusLabel = cardElement.querySelector('.status-label');
+            const pulseIcon = cardElement.querySelector('.pulse-icon');
+
+            if (audio.paused) {
+                if (currentPlayingAudio && currentPlayingAudio !== audio) {
+                    currentPlayingAudio.pause();
+                    document.querySelectorAll('.featured-card').forEach(c => {
+                        c.classList.remove('playing');
+                        c.querySelector('.status-label').textContent = 'Click to Play';
+                        c.querySelector('.pulse-icon').textContent = '▶';
+                    });
+                }
+                audio.play();
+                currentPlayingAudio = audio;
+                cardElement.classList.add('playing');
+                statusLabel.textContent = 'Playing...';
+                pulseIcon.textContent = '❚❚';
+            } else {
+                audio.pause();
+                cardElement.classList.remove('playing');
+                statusLabel.textContent = 'Click to Play';
+                pulseIcon.textContent = '▶';
+            }
+
+            audio.onended = () => {
+                cardElement.classList.remove('playing');
+                statusLabel.textContent = 'Click to Play';
+                pulseIcon.textContent = '▶';
+            };
+        }
+
+        /* -------------------------------------------------------------
+           MODAL TOGGLES
+        ------------------------------------------------------------- */
+        const guideModal = document.getElementById('guideModal');
+        const inquiryModal = document.getElementById('inquiryModal');
+
+        document.getElementById('openGuideBtn').addEventListener('click', () => {
+            guideModal.classList.add('active');
+        });
+
+        function closeGuideModal() {
+            guideModal.classList.remove('active');
+        }
+
+        function openInquiryModal(trackTitle) {
+            document.getElementById('inquiryTrackTitle').textContent = `Inquire: ${trackTitle}`;
+            inquiryModal.classList.add('active');
+        }
+
+        function closeInquiryModal() {
+            inquiryModal.classList.remove('active');
+        }
+
+        // Close modals when clicking outside container
+        window.addEventListener('click', (e) => {
+            if (e.target === guideModal) closeGuideModal();
+            if (e.target === inquiryModal) closeInquiryModal();
+        });
+
+        /* -------------------------------------------------------------
+           ANTI-THEFT & DEVTOOLS DETERRENTS
+        ------------------------------------------------------------- */
+        // Block inspection key commands
+        document.addEventListener('keydown', (e) => {
+            if (e.keyCode === 123 || // F12
+               (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || // Ctrl+Shift+I/J
+               (e.ctrlKey && e.keyCode === 85)) { // Ctrl+U
+                e.preventDefault();
+            }
+        });
+    </script>
 </body>
 </html>
