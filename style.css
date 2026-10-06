@@ -550,6 +550,40 @@ audio {
     color: var(--text-primary);
 }
 
+/* STREAM PLAY/STOP BUTTON */
+.stream-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border-radius: var(--radius-pill);
+    padding: 7px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.stream-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+/* ACTIVE PLAYING STATE (STOP STATE) */
+.stream-btn.playing {
+    background: linear-gradient(135deg, #ff3366 0%, #aa1438 100%);
+    border-color: #ff3366;
+    color: #ffffff;
+    box-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
+}
+
+.stream-btn.playing .icon {
+    font-size: 10px;
+}
+
 /* FOOTER */
 .footer {
     padding: 35px 24px;
