@@ -144,51 +144,21 @@
                               data-collection: name of collection, or "null" if standalone
                               data-status: "available" or "exclusive-sold"
                             -->
-                            <tr data-genre="Trap" data-key="C# Min" data-bpm="140" data-collection="Vault Vol. 1" data-status="available" data-seconds="185">
-                                <td class="title-cell">Midnight Eclipse</td>
+
+                            <tr data-genre="Hip-Hop" data-key="G# Min" data-bpm="186" data-collection="null" data-status="available" data-seconds="149">
+                                <td class="title-cell">Lucky</td>
                                 <td>
-                                    <audio controls controlsList="nodownload noplaybackrate" preload="none" onplay="handleSingleAudioPlay(this)">
-                                        <source src="audio/midnight-eclipse-tagged.mp3" type="audio/mpeg">
-                                    </audio>
+                                    <!-- DIRECT STREAM BUTTON (NO GITHUB STORAGE NEEDED) -->
+                                    <button class="stream-btn" data-audio-src="https://www.dropbox.com/scl/fi/YOUR_LINK_HERE?rlkey=...&raw=1" onclick="toggleStream(this)">
+                                        <span class="icon">▶</span> <span class="label">Play</span>
+                                    </button>
                                 </td>
-                                <td>C# Min</td>
-                                <td>140</td>
-                                <td><span class="tag">Trap</span></td>
-                                <td class="collection-cell">Vault Vol. 1</td>
+                                <td>G# Min</td>
+                                <td>186</td>
+                                <td><span class="tag">Hip-Hop</span></td>
+                                <td class="collection-cell"></td>
                                 <td><span class="badge available">Available</span></td>
                                 <td><button class="action-btn inquire" onclick="openInquiryModal('Midnight Eclipse')">Inquire</button></td>
-                            </tr>
-
-                            <!-- ROW 2 TEMPLATE: EXCLUSIVE SOLD BEAT -->
-                            <tr data-genre="R&B" data-key="F Maj" data-bpm="128" data-collection="null" data-status="exclusive-sold" data-seconds="210">
-                                <td class="title-cell">Synthetic Souls</td>
-                                <td>
-                                    <audio controls controlsList="nodownload noplaybackrate" preload="none" onplay="handleSingleAudioPlay(this)">
-                                        <source src="audio/synthetic-souls-tagged.mp3" type="audio/mpeg">
-                                    </audio>
-                                </td>
-                                <td>F Maj</td>
-                                <td>128</td>
-                                <td><span class="tag">R&B</span></td>
-                                <td class="collection-cell">—</td>
-                                <td><span class="badge sold">Exclusive Sold</span></td>
-                                <td><button class="action-btn sold" disabled>Sold Out</button></td>
-                            </tr>
-
-                            <!-- ROW 3 TEMPLATE -->
-                            <tr data-genre="Drill" data-key="D Min" data-bpm="160" data-collection="Vault Vol. 1" data-status="available" data-seconds="160">
-                                <td class="title-cell">Nebula Mirage</td>
-                                <td>
-                                    <audio controls controlsList="nodownload noplaybackrate" preload="none" onplay="handleSingleAudioPlay(this)">
-                                        <source src="audio/nebula-mirage-tagged.mp3" type="audio/mpeg">
-                                    </audio>
-                                </td>
-                                <td>D Min</td>
-                                <td>160</td>
-                                <td><span class="tag">Drill</span></td>
-                                <td class="collection-cell">Vault Vol. 1</td>
-                                <td><span class="badge available">Available</span></td>
-                                <td><button class="action-btn inquire" onclick="openInquiryModal('Nebula Mirage')">Inquire</button></td>
                             </tr>
 
                         </tbody>
@@ -383,50 +353,58 @@
             rows.forEach(r => tbody.appendChild(r));
         }
 
-        /* -------------------------------------------------------------
-           AUDIO PLAYER SINGLE-PLAYBACK HANDLER
-        ------------------------------------------------------------- */
-        let currentPlayingAudio = null;
-
-        function handleSingleAudioPlay(playingElement) {
-            if (currentPlayingAudio && currentPlayingAudio !== playingElement) {
-                currentPlayingAudio.pause();
+        /* =============================================================
+           BACKGROUND AUDIO STREAM CONTROLLER
+           Plays external links directly with zero popups or redirects
+           ============================================================= */
+        const globalAudioPlayer = new Audio();
+        let activeStreamButton = null;
+        
+        function toggleStream(button) {
+            const audioUrl = button.getAttribute('data-audio-src');
+        
+            // Case 1: The user clicked "Stop" on the currently playing track
+            if (activeStreamButton === button) {
+                stopCurrentTrack();
+                return;
             }
-            currentPlayingAudio = playingElement;
-        }
-
-        function toggleFeaturedAudio(audioId, cardElement) {
-            const audio = document.getElementById(audioId);
-            const statusLabel = cardElement.querySelector('.status-label');
-            const pulseIcon = cardElement.querySelector('.pulse-icon');
-
-            if (audio.paused) {
-                if (currentPlayingAudio && currentPlayingAudio !== audio) {
-                    currentPlayingAudio.pause();
-                    document.querySelectorAll('.featured-card').forEach(c => {
-                        c.classList.remove('playing');
-                        c.querySelector('.status-label').textContent = 'Click to Play';
-                        c.querySelector('.pulse-icon').textContent = '▶';
-                    });
-                }
-                audio.play();
-                currentPlayingAudio = audio;
-                cardElement.classList.add('playing');
-                statusLabel.textContent = 'Playing...';
-                pulseIcon.textContent = '❚❚';
-            } else {
-                audio.pause();
-                cardElement.classList.remove('playing');
-                statusLabel.textContent = 'Click to Play';
-                pulseIcon.textContent = '▶';
+        
+            // Case 2: Another track is playing — stop and reset it first
+            if (activeStreamButton) {
+                stopCurrentTrack();
             }
-
-            audio.onended = () => {
-                cardElement.classList.remove('playing');
-                statusLabel.textContent = 'Click to Play';
-                pulseIcon.textContent = '▶';
-            };
+        
+            // Case 3: Start playback on the newly clicked track
+            globalAudioPlayer.src = audioUrl;
+            globalAudioPlayer.play().then(() => {
+                activeStreamButton = button;
+                button.classList.add('playing');
+                button.querySelector('.icon').textContent = '■';
+                button.querySelector('.label').textContent = 'Stop';
+            }).catch(err => {
+                console.error("Playback error:", err);
+                alert("Audio stream could not load. Please verify the URL.");
+            });
         }
+        
+        function stopCurrentTrack() {
+            if (!activeStreamButton) return;
+            
+            // Halt and rewind back to 0:00
+            globalAudioPlayer.pause();
+            globalAudioPlayer.currentTime = 0;
+            
+            // Reset button UI
+            activeStreamButton.classList.remove('playing');
+            activeStreamButton.querySelector('.icon').textContent = '▶';
+            activeStreamButton.querySelector('.label').textContent = 'Play';
+            activeStreamButton = null;
+        }
+        
+        // Automatically reset the button when the track finishes
+        globalAudioPlayer.addEventListener('ended', () => {
+            stopCurrentTrack();
+        });
 
         /* -------------------------------------------------------------
            MODAL TOGGLES
