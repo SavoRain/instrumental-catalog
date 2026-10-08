@@ -634,3 +634,23 @@ audio {
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
+
+/* =============================================================
+   STREAM BUTTON LOADING STATE
+   ============================================================= */
+.stream-btn.loading {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #9ea3b5;
+    cursor: wait;
+}
+
+.stream-btn.loading .icon {
+    display: inline-block;
+    animation: spinIcon 1s linear infinite;
+}
+
+@keyframes spinIcon {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
