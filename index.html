@@ -143,7 +143,7 @@
                                 data-status="available"></tr>
                             
                             <tr data-title="Craft" 
-                                data-audio="https://www.dropbox.com/scl/fi/tmn0hetcgpv2hmalrxb59/Craft.wav?rlkey=e0gthplb6uiff1nnivar3l1jh&st=1pfrwo1j&raw=1" 
+                                data-audio="https://www.dropbox.com/scl/fi/sl4ocmsfrvbd9qyo3kb2c/Craft.wav?rlkey=rae4jiqpnab1t415jk9u82syu&st=4j9zt8i7&raw=1" 
                                 data-seconds="185" 
                                 data-bpm="124" 
                                 data-genre="Hip-Hop" 
@@ -400,20 +400,23 @@
 
                 // Inject markup into row
                 row.innerHTML = `
-                    <td class="title-cell">${title}</td>
-                    <td>
-                        <button class="stream-btn" data-audio-src="${audioSrc}" onclick="toggleStream(this)">
-                            <span class="icon">▶</span> <span class="label">Play</span>
-                        </button>
-                    </td>
-                    <td class="time-cell">${formattedTime}</td>
-                    <td>${bpm}</td>
-                    <td>${formatBadgeLabels(genreRaw)}</td>
-                    <td>${formatBadgeLabels(styleRaw)}</td>
-                    <td class="collection-cell">${collectionDisplay}</td>
-                    <td>${statusBadge}</td>
-                    <td>${actionButton}</td>
-                `;
+                <td class="title-cell">${title}</td>
+                <td>
+                    <button class="stream-btn" data-audio-src="${audioSrc}" 
+                            onmouseenter="preloadAudioStream(this)" 
+                            ontouchstart="preloadAudioStream(this)" 
+                            onclick="toggleStream(this)">
+                        <span class="icon">▶</span> <span class="label">Play</span>
+                    </button>
+                </td>
+                <td class="time-cell">${formattedTime}</td>
+                <td>${bpm}</td>
+                <td>${formatBadgeLabels(genreRaw)}</td>
+                <td>${formatBadgeLabels(styleRaw)}</td>
+                <td class="collection-cell">${collectionDisplay}</td>
+                <td>${statusBadge}</td>
+                <td>${actionButton}</td>
+            `;
             });
 
             // Dynamically populate Genre Filter dropdown
@@ -522,25 +525,77 @@
             rows.forEach(r => tbody.appendChild(r));
         }
 
-        /* -------------------------------------------------------------
-           5. AUDIO STREAM CONTROLLER
-        ------------------------------------------------------------- */
+        /* =============================================================
+           5. OPTIMIZED AUDIO STREAM CONTROLLER (ZERO CUTOFF & LOW LATENCY)
+           ============================================================= */
         const globalAudioPlayer = new Audio();
+        globalAudioPlayer.preload = "auto";
         let activeStreamButton = null;
-
-        function toggleStream(button) {
+        let audioHardwareWarmed = false;
+        
+        // Wakes up operating system soundcard DAC to prevent initial hardware fade-in clipping
+        function warmAudioHardware() {
+            if (audioHardwareWarmed) return;
+            try {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    const ctx = new AudioContextClass();
+                    if (ctx.state === 'suspended') {
+                        ctx.resume();
+                    }
+                    const buffer = ctx.createBuffer(1, 1, 22050);
+                    const source = ctx.createBufferSource();
+                    source.buffer = buffer;
+                    source.connect(ctx.destination);
+                    source.start(0);
+                    audioHardwareWarmed = true;
+                }
+            } catch (e) {
+                // Fallback for sandboxed web environments
+            }
+        }
+        
+        // Pre-buffers audio file headers on mouse hover or touch start
+        function preloadAudioStream(button) {
             const audioUrl = button.getAttribute('data-audio-src');
-
+            if (!audioUrl || globalAudioPlayer.src === audioUrl) return;
+        
+            let prefetch = document.getElementById('stream-prefetch');
+            if (!prefetch) {
+                prefetch = document.createElement('link');
+                prefetch.id = 'stream-prefetch';
+                prefetch.rel = 'preload';
+                prefetch.as = 'fetch';
+                document.head.appendChild(prefetch);
+            }
+            prefetch.href = audioUrl;
+        }
+        
+        function toggleStream(button) {
+            warmAudioHardware();
+        
+            const audioUrl = button.getAttribute('data-audio-src');
+        
+            // Case 1: Stop current track
             if (activeStreamButton === button) {
                 stopCurrentTrack();
                 return;
             }
-
+        
+            // Case 2: Reset previously playing track
             if (activeStreamButton) {
                 stopCurrentTrack();
             }
-
+        
+            // Case 3: Load and play new track from exact 0.0
             globalAudioPlayer.src = audioUrl;
+        
+            const onMetadataReady = () => {
+                globalAudioPlayer.currentTime = 0;
+                globalAudioPlayer.removeEventListener('loadedmetadata', onMetadataReady);
+            };
+            globalAudioPlayer.addEventListener('loadedmetadata', onMetadataReady);
+        
             globalAudioPlayer.play().then(() => {
                 activeStreamButton = button;
                 button.classList.add('playing');
@@ -551,7 +606,7 @@
                 alert("Audio stream could not load. Verify your direct audio raw=1 link.");
             });
         }
-
+        
         function stopCurrentTrack() {
             if (!activeStreamButton) return;
             globalAudioPlayer.pause();
@@ -562,7 +617,7 @@
             activeStreamButton.querySelector('.label').textContent = 'Play';
             activeStreamButton = null;
         }
-
+        
         globalAudioPlayer.addEventListener('ended', () => {
             stopCurrentTrack();
         });
