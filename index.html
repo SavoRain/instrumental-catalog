@@ -398,11 +398,14 @@
                     actionButton = `<button class="action-btn inquire" onclick="openInquiryModal('${title.replace(/'/g, "\\'")}')">Inquire</button>`;
                 }
 
-                // Inject markup into row (clean button without fetch conflict)
+                // Inject markup into row
                 row.innerHTML = `
                     <td class="title-cell">${title}</td>
                     <td>
-                        <button class="stream-btn" data-audio-src="${audioSrc}" onclick="toggleStream(this)">
+                        <button class="stream-btn" data-audio-src="${audioSrc}" 
+                                onmouseenter="preloadAudioStream(this)" 
+                                ontouchstart="preloadAudioStream(this)" 
+                                onclick="toggleStream(this)">
                             <span class="icon">▶</span> <span class="label">Play</span>
                         </button>
                     </td>
@@ -523,22 +526,46 @@
         }
 
         /* =============================================================
-           5. OPTIMIZED AUDIO STREAM CONTROLLER (CACHE-SAFE, ZERO-SEEK)
+           5. OPTIMIZED AUDIO STREAM CONTROLLER (CACHE-SAFE & ZERO CUTOFF)
            ============================================================= */
-        let globalAudioPlayer = null;
+        const globalAudioPlayer = new Audio();
+        globalAudioPlayer.preload = "auto";
         let activeStreamButton = null;
+        let persistentAudioContext = null;
 
-        // Automatically bypasses Dropbox 302 redirect to stream directly from CDN
-        function getDirectStreamUrl(url) {
-            if (!url) return '';
-            return url.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+        // Keeps hardware DAC permanently awake across all track transitions
+        function warmAudioHardware() {
+            try {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!persistentAudioContext && AudioContextClass) {
+                    persistentAudioContext = new AudioContextClass();
+                }
+                if (persistentAudioContext && persistentAudioContext.state === 'suspended') {
+                    persistentAudioContext.resume();
+                }
+            } catch (e) {
+                // AudioContext fallback
+            }
+        }
+
+        // Pre-buffers audio file headers on hover or touch using a matching media pipeline
+        const preloadCache = new Set();
+        function preloadAudioStream(button) {
+            const audioUrl = button.getAttribute('data-audio-src');
+            if (!audioUrl || globalAudioPlayer.src === audioUrl || preloadCache.has(audioUrl)) return;
+
+            preloadCache.add(audioUrl);
+            const preloader = new Audio();
+            preloader.preload = "auto";
+            preloader.src = audioUrl;
         }
 
         function toggleStream(button) {
-            const rawUrl = button.getAttribute('data-audio-src');
-            const streamUrl = getDirectStreamUrl(rawUrl);
+            warmAudioHardware();
 
-            // Case 1: Stop current track
+            const audioUrl = button.getAttribute('data-audio-src');
+
+            // Case 1: Stop currently playing track
             if (activeStreamButton === button) {
                 stopCurrentTrack();
                 return;
@@ -549,47 +576,43 @@
                 stopCurrentTrack();
             }
 
-            // Case 3: Fresh instance without seek race condition
-            // By NOT calling currentTime = 0, cached audio will never trigger an in-stream seek fade.
-            const player = new Audio();
-            player.preload = "auto";
-            player.src = streamUrl;
+            // Case 3: Play track from exact 0.0 without post-start seek glitch
+            if (globalAudioPlayer.src !== audioUrl) {
+                globalAudioPlayer.src = audioUrl;
+            } else {
+                // Already has this source loaded: seek only while paused before playback starts
+                globalAudioPlayer.currentTime = 0;
+            }
 
-            globalAudioPlayer = player;
             activeStreamButton = button;
+            button.classList.add('playing');
+            button.querySelector('.icon').textContent = '■';
+            button.querySelector('.label').textContent = 'Stop';
 
-            player.play().then(() => {
-                button.classList.add('playing');
-                button.querySelector('.icon').textContent = '■';
-                button.querySelector('.label').textContent = 'Stop';
-            }).catch(err => {
+            globalAudioPlayer.play().catch(err => {
                 if (err.name !== 'AbortError') {
                     console.error("Playback error:", err);
                     stopCurrentTrack();
                     alert("Audio stream could not load. Verify your direct audio raw=1 link.");
                 }
             });
-
-            player.addEventListener('ended', () => {
-                stopCurrentTrack();
-            });
         }
 
         function stopCurrentTrack() {
-            if (globalAudioPlayer) {
-                globalAudioPlayer.pause();
-                globalAudioPlayer.removeAttribute('src'); // Detach audio pipeline
-                globalAudioPlayer.load();                 // Flush decoder buffers immediately
-                globalAudioPlayer = null;
-            }
+            if (!activeStreamButton) return;
 
-            if (activeStreamButton) {
-                activeStreamButton.classList.remove('playing');
-                activeStreamButton.querySelector('.icon').textContent = '▶';
-                activeStreamButton.querySelector('.label').textContent = 'Play';
-                activeStreamButton = null;
-            }
+            globalAudioPlayer.pause();
+            globalAudioPlayer.currentTime = 0;
+
+            activeStreamButton.classList.remove('playing');
+            activeStreamButton.querySelector('.icon').textContent = '▶';
+            activeStreamButton.querySelector('.label').textContent = 'Play';
+            activeStreamButton = null;
         }
+
+        globalAudioPlayer.addEventListener('ended', () => {
+            stopCurrentTrack();
+        });
         
         /* -------------------------------------------------------------
            6. MODAL CONTROLS
