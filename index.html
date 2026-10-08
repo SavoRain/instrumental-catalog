@@ -39,39 +39,27 @@
             <button id="openGuideBtn" class="glow-button">Leasing / Purchase Guide</button>
         </section>
 
-        <!-- CONTROLS: FILTER BAR -->
+        <!-- CONTROLS: DYNAMIC FILTER BAR -->
         <section class="filter-controls-container" id="filterContainer">
             <div class="filters-card">
                 
-                <div class="filter-group">
+                <!-- Dynamic Collection Dropdown (Hides if no items have collections) -->
+                <div class="filter-group" id="collectionFilterGroup">
                     <label>Collection</label>
                     <select id="collectionFilter" onchange="applyFilters()">
                         <option value="all">All Collections</option>
                     </select>
                 </div>
 
-                <div class="filter-group">
+                <!-- Dynamic Genre Dropdown (Populates strictly from catalog contents) -->
+                <div class="filter-group" id="genreFilterGroup">
                     <label>Genre</label>
                     <select id="genreFilter" onchange="applyFilters()">
                         <option value="all">All Genres</option>
-                        <option value="Hip-Hop">Hip-Hop</option>
-                        <option value="Trap">Trap</option>
-                        <option value="R&B">R&B</option>
-                        <option value="Drill">Drill</option>
                     </select>
                 </div>
 
-                <div class="filter-group">
-                    <label>Key</label>
-                    <select id="keyFilter" onchange="applyFilters()">
-                        <option value="all">All Keys</option>
-                        <option value="G# Min">G# Min</option>
-                        <option value="C# Min">C# Min</option>
-                        <option value="F Maj">F Maj</option>
-                        <option value="D Min">D Min</option>
-                    </select>
-                </div>
-
+                <!-- Sort Control -->
                 <div class="filter-group">
                     <label>Sort By Length</label>
                     <select id="lengthSort" onchange="applyFilters()">
@@ -81,6 +69,7 @@
                     </select>
                 </div>
 
+                <!-- Toggle Sold Beats -->
                 <div class="filter-group toggle-group">
                     <label>Show Sold Beats</label>
                     <label class="switch">
@@ -109,7 +98,6 @@
                                 <th>Title</th>
                                 <th>Audio Preview</th>
                                 <th>Time</th>
-                                <th>Key</th>
                                 <th>BPM</th>
                                 <th>Genre</th>
                                 <th>Style</th>
@@ -120,15 +108,26 @@
                         </thead>
                         <tbody id="instrumentalsBody">
                             
-                            <!-- 
-                              HOW TO ADD A BEAT:
-                              Just write a single <tr ...> tag with your parameters. 
-                              Leave the inside completely empty! The engine populates all cells automatically.
-                            -->
+                            <!-- =========================================================================
+                              HOW TO ADD & EDIT BEATS:
+                              1. Create a single <tr ...> tag with the attributes below. Leave the tag completely empty.
+                              2. Parameters:
+                                 - data-title: The beat's display name.
+                                 - data-audio: Direct audio URL (e.g., Dropbox link ending in &raw=1).
+                                 - data-seconds: Total track duration in seconds (formatted as [mm:ss] automatically).
+                                 - data-bpm: Tempo number.
+                                 - data-genre: Single genre or comma-separated list (e.g. "Hip-Hop, Trap, Drill").
+                                 - data-style: Single style or comma-separated list (e.g. "Chill, Dark, Melodic").
+                                 - data-collection: Name of collection/series (e.g. "Vault Vol. 1") or "null" if standalone.
+                                 - data-status: 
+                                     * "available"      -> Green badge + Inquire button
+                                     * "special"        -> Shiny animated gold badge + Inquire button
+                                     * "exclusive-sold" -> Red badge + Disabled "Sold Out" button
+                              ========================================================================= -->
+
                             <tr data-title="Lucky" 
                                 data-audio="https://www.dropbox.com/scl/fi/eav63390loqo9enyeuj1r/Lucky.wav?rlkey=hifkgz8ngyy41f5bo6beff8b4&st=a484vijh&raw=1" 
                                 data-seconds="149" 
-                                data-key="G# Min" 
                                 data-bpm="186" 
                                 data-genre="Hip-Hop" 
                                 data-style="Chill" 
@@ -163,7 +162,7 @@
         <p>&copy; 2026 SavoRain. All rights reserved. Master rights retained by producer.</p>
     </footer>
 
-    <!-- MODAL: LEASING & PURCHASE GUIDE -->
+    <!-- MODAL: LEASING & PURCHASE GUIDE (PRICING REFERENCE TABLE) -->
     <div id="guideModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
@@ -209,6 +208,13 @@
                             <td>All Files + Ownership</td>
                             <td>Full Master Ownership</td>
                         </tr>
+                        <!-- Special Status Row -->
+                        <tr>
+                            <td><strong>Special Status</strong></td>
+                            <td>Negotiation</td>
+                            <td>All Files + Ownership</td>
+                            <td>Full Master Ownership</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -228,47 +234,74 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT CONTROLLERS -->
+    <!-- SCRIPT CONTROLLERS -->
     <script>
-        const availableCollections = ["Vault Vol. 1", "Ethereal Series", "Midnight Chronicles"];
+        /* -------------------------------------------------------------
+           1. HELPER: COMMA-SEPARATED LABELS GENERATOR
+        ------------------------------------------------------------- */
+        function formatBadgeLabels(rawString) {
+            if (!rawString || rawString.trim() === '' || rawString === 'null') return '—';
+            const items = rawString.split(',').map(item => item.trim()).filter(Boolean);
+            if (items.length === 0) return '—';
+            return items.map(val => `<span class="tag">${val}</span>`).join(', ');
+        }
 
         /* -------------------------------------------------------------
-           1. AUTO-POPULATE ENGINE FOR ROW PARAMETERS
-           Converts <tr data-...> into full rendered table markup
+           2. AUTO-POPULATE ROWS & DYNAMIC DROPDOWNS
         ------------------------------------------------------------- */
         function populateCatalogRows() {
             const rows = document.querySelectorAll('#instrumentalsBody tr');
+            const genreSet = new Set();
+            const collectionSet = new Set();
+
             rows.forEach(row => {
                 const title = row.getAttribute('data-title') || 'Untitled';
                 const audioSrc = row.getAttribute('data-audio') || '';
                 const totalSeconds = parseInt(row.getAttribute('data-seconds') || '0', 10);
-                const key = row.getAttribute('data-key') || '—';
                 const bpm = row.getAttribute('data-bpm') || '—';
-                const genre = row.getAttribute('data-genre') || '—';
-                const style = row.getAttribute('data-style') || '—';
+                const genreRaw = row.getAttribute('data-genre') || '';
+                const styleRaw = row.getAttribute('data-style') || '';
                 const collection = row.getAttribute('data-collection');
                 const status = (row.getAttribute('data-status') || 'available').toLowerCase();
 
-                // Format total seconds into [mm:ss]
+                // Collect unique genres
+                if (genreRaw) {
+                    genreRaw.split(',').map(g => g.trim()).filter(Boolean).forEach(g => genreSet.add(g));
+                }
+
+                // Collect unique collections
+                if (collection && collection !== 'null' && collection.trim() !== '') {
+                    collectionSet.add(collection.trim());
+                }
+
+                // Format duration into [mm:ss]
                 const minutes = Math.floor(totalSeconds / 60);
                 const remainingSeconds = totalSeconds % 60;
                 const formattedTime = `[${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}]`;
 
-                // Check collection display
+                // Build Collection cell display
                 const hasCollection = collection && collection !== 'null' && collection.trim() !== '';
                 const collectionDisplay = hasCollection ? collection : '—';
 
-                // Check availability
-                const isAvailable = status === 'available';
-                const statusBadge = isAvailable 
-                    ? '<span class="badge available">Available</span>' 
-                    : '<span class="badge sold">Exclusive Sold</span>';
-                
-                const actionButton = isAvailable 
-                    ? `<button class="action-btn inquire" onclick="openInquiryModal('${title.replace(/'/g, "\\'")}')">Inquire</button>`
-                    : '<button class="action-btn sold" disabled>Sold Out</button>';
+                // Status formatting
+                let statusBadge = '';
+                let actionButton = '';
 
-                // Inject generated markup
+                if (status === 'available') {
+                    statusBadge = '<span class="badge available">Available</span>';
+                    actionButton = `<button class="action-btn inquire" onclick="openInquiryModal('${title.replace(/'/g, "\\'")}')">Inquire</button>`;
+                } else if (status === 'special') {
+                    statusBadge = '<span class="badge special">Special</span>';
+                    actionButton = `<button class="action-btn inquire" onclick="openInquiryModal('${title.replace(/'/g, "\\'")}')">Inquire</button>`;
+                } else if (status === 'exclusive-sold' || status === 'sold') {
+                    statusBadge = '<span class="badge sold">Exclusive Sold</span>';
+                    actionButton = '<button class="action-btn sold" disabled>Sold Out</button>';
+                } else {
+                    statusBadge = `<span class="badge available">${status}</span>`;
+                    actionButton = `<button class="action-btn inquire" onclick="openInquiryModal('${title.replace(/'/g, "\\'")}')">Inquire</button>`;
+                }
+
+                // Inject markup into row
                 row.innerHTML = `
                     <td class="title-cell">${title}</td>
                     <td>
@@ -277,34 +310,52 @@
                         </button>
                     </td>
                     <td class="time-cell">${formattedTime}</td>
-                    <td>${key}</td>
                     <td>${bpm}</td>
-                    <td><span class="tag">${genre}</span></td>
-                    <td><span class="tag">${style}</span></td>
+                    <td>${formatBadgeLabels(genreRaw)}</td>
+                    <td>${formatBadgeLabels(styleRaw)}</td>
                     <td class="collection-cell">${collectionDisplay}</td>
                     <td>${statusBadge}</td>
                     <td>${actionButton}</td>
                 `;
             });
-        }
 
-        // Run population on page startup
-        window.addEventListener('DOMContentLoaded', () => {
-            populateCatalogRows();
-
-            const dropdown = document.getElementById('collectionFilter');
-            availableCollections.forEach(col => {
+            // Dynamically populate Genre Filter dropdown
+            const genreDropdown = document.getElementById('genreFilter');
+            genreDropdown.innerHTML = '<option value="all">All Genres</option>';
+            Array.from(genreSet).sort().forEach(g => {
                 const opt = document.createElement('option');
-                opt.value = col;
-                opt.textContent = col;
-                dropdown.appendChild(opt);
+                opt.value = g;
+                opt.textContent = g;
+                genreDropdown.appendChild(opt);
             });
 
+            // Dynamically populate Collection Filter dropdown
+            const collectionDropdown = document.getElementById('collectionFilter');
+            const collectionGroup = document.getElementById('collectionFilterGroup');
+            collectionDropdown.innerHTML = '<option value="all">All Collections</option>';
+
+            if (collectionSet.size === 0) {
+                // Hide collection filter group entirely if no beats belong to a collection
+                collectionGroup.style.display = 'none';
+            } else {
+                collectionGroup.style.display = 'flex';
+                Array.from(collectionSet).sort().forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    collectionDropdown.appendChild(opt);
+                });
+            }
+        }
+
+        // Initialize on DOM load
+        window.addEventListener('DOMContentLoaded', () => {
+            populateCatalogRows();
             cacheOriginalRowOrder();
         });
 
         /* -------------------------------------------------------------
-           2. TAB SWITCHING
+           3. TAB SWITCHING
         ------------------------------------------------------------- */
         function switchTab(tabName, clickedBtn) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -318,7 +369,7 @@
         }
 
         /* -------------------------------------------------------------
-           3. FILTER & SORT ENGINE
+           4. FILTER & SORT ENGINE
         ------------------------------------------------------------- */
         let originalRows = [];
 
@@ -328,9 +379,8 @@
         }
 
         function applyFilters() {
-            const genre = document.getElementById('genreFilter').value;
-            const key = document.getElementById('keyFilter').value;
-            const collection = document.getElementById('collectionFilter').value;
+            const selectedGenre = document.getElementById('genreFilter').value;
+            const selectedCollection = document.getElementById('collectionFilter').value;
             const showSold = document.getElementById('soldToggle').checked;
             const lengthSort = document.getElementById('lengthSort').value;
             const tbody = document.getElementById('instrumentalsBody');
@@ -338,31 +388,34 @@
             let rows = [...originalRows];
 
             rows.forEach(row => {
-                const rowGenre = row.getAttribute('data-genre');
-                const rowKey = row.getAttribute('data-key');
+                const genreRaw = row.getAttribute('data-genre') || '';
+                const rowGenres = genreRaw.split(',').map(g => g.trim()).filter(Boolean);
                 const rowCol = row.getAttribute('data-collection');
-                const rowStatus = row.getAttribute('data-status');
+                const rowStatus = (row.getAttribute('data-status') || '').toLowerCase();
 
-                let matchesGenre = (genre === 'all' || rowGenre === genre);
-                let matchesKey = (key === 'all' || rowKey === key);
+                // Genre matching (checks if array contains selected genre)
+                let matchesGenre = (selectedGenre === 'all' || rowGenres.includes(selectedGenre));
                 
+                // Collection matching
                 let matchesCollection = true;
-                if (collection !== 'all') {
-                    matchesCollection = (rowCol !== null && rowCol !== 'null' && rowCol === collection);
+                if (selectedCollection !== 'all') {
+                    matchesCollection = (rowCol !== null && rowCol !== 'null' && rowCol === selectedCollection);
                 }
 
+                // Sold beats toggle
                 let matchesSold = true;
-                if (!showSold && rowStatus === 'exclusive-sold') {
+                if (!showSold && (rowStatus === 'exclusive-sold' || rowStatus === 'sold')) {
                     matchesSold = false;
                 }
 
-                if (matchesGenre && matchesKey && matchesCollection && matchesSold) {
+                if (matchesGenre && matchesCollection && matchesSold) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
                 }
             });
 
+            // Length sorting
             if (lengthSort === 'shortest') {
                 rows.sort((a, b) => parseInt(a.getAttribute('data-seconds')) - parseInt(b.getAttribute('data-seconds')));
             } else if (lengthSort === 'longest') {
@@ -373,7 +426,7 @@
         }
 
         /* -------------------------------------------------------------
-           4. AUDIO STREAM CONTROLLER
+           5. AUDIO STREAM CONTROLLER
         ------------------------------------------------------------- */
         const globalAudioPlayer = new Audio();
         let activeStreamButton = null;
@@ -398,7 +451,7 @@
                 button.querySelector('.label').textContent = 'Stop';
             }).catch(err => {
                 console.error("Playback error:", err);
-                alert("Audio stream could not load. Verify your Dropbox direct raw=1 link.");
+                alert("Audio stream could not load. Verify your direct audio raw=1 link.");
             });
         }
 
@@ -418,7 +471,7 @@
         });
 
         /* -------------------------------------------------------------
-           5. MODAL TRIGGERS
+           6. MODAL CONTROLS
         ------------------------------------------------------------- */
         const guideModal = document.getElementById('guideModal');
         const inquiryModal = document.getElementById('inquiryModal');
@@ -446,7 +499,7 @@
         });
 
         /* -------------------------------------------------------------
-           6. DEVTOOLS DETERRENTS
+           7. ANTI-THEFT & DEVTOOLS DETERRENTS
         ------------------------------------------------------------- */
         document.addEventListener('keydown', (e) => {
             if (e.keyCode === 123 || 
