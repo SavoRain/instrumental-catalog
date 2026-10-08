@@ -612,3 +612,25 @@ audio {
         margin-left: 0;
     }
 }
+
+/* =============================================================
+   SHINY "SPECIAL" STATUS BADGE
+   Iridescent metallic gold gradient with animated sheen
+   ============================================================= */
+.badge.special {
+    background: linear-gradient(135deg, #ffd700 0%, #fff8c4 25%, #d4af37 50%, #ffffff 75%, #ffd700 100%);
+    background-size: 300% 300%;
+    color: #121002;
+    font-weight: 700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.45), inset 0 0 4px rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    animation: goldShimmer 4s ease infinite;
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.6);
+    display: inline-block;
+}
+
+@keyframes goldShimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
