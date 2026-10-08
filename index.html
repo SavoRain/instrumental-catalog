@@ -398,25 +398,22 @@
                     actionButton = `<button class="action-btn inquire" onclick="openInquiryModal('${title.replace(/'/g, "\\'")}')">Inquire</button>`;
                 }
 
-                // Inject markup into row
+                // Inject markup into row (clean button without fetch conflict)
                 row.innerHTML = `
-                <td class="title-cell">${title}</td>
-                <td>
-                    <button class="stream-btn" data-audio-src="${audioSrc}" 
-                            onmouseenter="preloadAudioStream(this)" 
-                            ontouchstart="preloadAudioStream(this)" 
-                            onclick="toggleStream(this)">
-                        <span class="icon">▶</span> <span class="label">Play</span>
-                    </button>
-                </td>
-                <td class="time-cell">${formattedTime}</td>
-                <td>${bpm}</td>
-                <td>${formatBadgeLabels(genreRaw)}</td>
-                <td>${formatBadgeLabels(styleRaw)}</td>
-                <td class="collection-cell">${collectionDisplay}</td>
-                <td>${statusBadge}</td>
-                <td>${actionButton}</td>
-            `;
+                    <td class="title-cell">${title}</td>
+                    <td>
+                        <button class="stream-btn" data-audio-src="${audioSrc}" onclick="toggleStream(this)">
+                            <span class="icon">▶</span> <span class="label">Play</span>
+                        </button>
+                    </td>
+                    <td class="time-cell">${formattedTime}</td>
+                    <td>${bpm}</td>
+                    <td>${formatBadgeLabels(genreRaw)}</td>
+                    <td>${formatBadgeLabels(styleRaw)}</td>
+                    <td class="collection-cell">${collectionDisplay}</td>
+                    <td>${statusBadge}</td>
+                    <td>${actionButton}</td>
+                `;
             });
 
             // Dynamically populate Genre Filter dropdown
@@ -526,49 +523,20 @@
         }
 
         /* =============================================================
-           5. OPTIMIZED AUDIO STREAM CONTROLLER (ZERO CUTOFF & CLEAN PIPELINE)
+           5. OPTIMIZED AUDIO STREAM CONTROLLER (CACHE-SAFE, ZERO-SEEK)
            ============================================================= */
         let globalAudioPlayer = null;
         let activeStreamButton = null;
-        let sharedAudioContext = null;
 
-        // Keeps hardware DAC awake across tracks
-        function warmAudioHardware() {
-            try {
-                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                if (AudioContextClass) {
-                    if (!sharedAudioContext) {
-                        sharedAudioContext = new AudioContextClass();
-                    }
-                    if (sharedAudioContext.state === 'suspended') {
-                        sharedAudioContext.resume();
-                    }
-                }
-            } catch (e) {
-                // AudioContext fallback
-            }
-        }
-
-        // Pre-buffers audio file headers on mouse hover or touch start
-        function preloadAudioStream(button) {
-            const audioUrl = button.getAttribute('data-audio-src');
-            if (!audioUrl || (globalAudioPlayer && globalAudioPlayer.src === audioUrl)) return;
-
-            let prefetch = document.getElementById('stream-prefetch');
-            if (!prefetch) {
-                prefetch = document.createElement('link');
-                prefetch.id = 'stream-prefetch';
-                prefetch.rel = 'preload';
-                prefetch.as = 'fetch';
-                document.head.appendChild(prefetch);
-            }
-            prefetch.href = audioUrl;
+        // Automatically bypasses Dropbox 302 redirect to stream directly from CDN
+        function getDirectStreamUrl(url) {
+            if (!url) return '';
+            return url.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
         }
 
         function toggleStream(button) {
-            warmAudioHardware();
-
-            const audioUrl = button.getAttribute('data-audio-src');
+            const rawUrl = button.getAttribute('data-audio-src');
+            const streamUrl = getDirectStreamUrl(rawUrl);
 
             // Case 1: Stop current track
             if (activeStreamButton === button) {
@@ -576,16 +544,16 @@
                 return;
             }
 
-            // Case 2: Reset and tear down previous track completely
+            // Case 2: Reset previously playing track
             if (activeStreamButton) {
                 stopCurrentTrack();
             }
 
-            // Case 3: Instantiate a completely fresh Audio element for every single play
-            // A new Audio element natively starts at exact 0.000000s without requiring an active seek
+            // Case 3: Fresh instance without seek race condition
+            // By NOT calling currentTime = 0, cached audio will never trigger an in-stream seek fade.
             const player = new Audio();
             player.preload = "auto";
-            player.src = audioUrl;
+            player.src = streamUrl;
 
             globalAudioPlayer = player;
             activeStreamButton = button;
@@ -595,7 +563,6 @@
                 button.querySelector('.icon').textContent = '■';
                 button.querySelector('.label').textContent = 'Stop';
             }).catch(err => {
-                // Ignore silent abort errors if user rapidly clicked Stop
                 if (err.name !== 'AbortError') {
                     console.error("Playback error:", err);
                     stopCurrentTrack();
@@ -603,7 +570,6 @@
                 }
             });
 
-            // Auto-reset when track finishes
             player.addEventListener('ended', () => {
                 stopCurrentTrack();
             });
@@ -613,7 +579,7 @@
             if (globalAudioPlayer) {
                 globalAudioPlayer.pause();
                 globalAudioPlayer.removeAttribute('src'); // Detach audio pipeline
-                globalAudioPlayer.load();               // Release demuxer memory immediately
+                globalAudioPlayer.load();                 // Flush decoder buffers immediately
                 globalAudioPlayer = null;
             }
 
@@ -624,7 +590,7 @@
                 activeStreamButton = null;
             }
         }
-
+        
         /* -------------------------------------------------------------
            6. MODAL CONTROLS
         ------------------------------------------------------------- */
