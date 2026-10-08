@@ -526,40 +526,34 @@
         }
 
         /* =============================================================
-           5. OPTIMIZED AUDIO STREAM CONTROLLER (ZERO CUTOFF & LOW LATENCY)
+           5. OPTIMIZED AUDIO STREAM CONTROLLER (ZERO CUTOFF & CLEAN PIPELINE)
            ============================================================= */
-        const globalAudioPlayer = new Audio();
-        globalAudioPlayer.preload = "auto";
+        let globalAudioPlayer = null;
         let activeStreamButton = null;
-        let audioHardwareWarmed = false;
-        
-        // Wakes up operating system soundcard DAC to prevent initial hardware fade-in clipping
+        let sharedAudioContext = null;
+
+        // Keeps hardware DAC awake across tracks
         function warmAudioHardware() {
-            if (audioHardwareWarmed) return;
             try {
                 const AudioContextClass = window.AudioContext || window.webkitAudioContext;
                 if (AudioContextClass) {
-                    const ctx = new AudioContextClass();
-                    if (ctx.state === 'suspended') {
-                        ctx.resume();
+                    if (!sharedAudioContext) {
+                        sharedAudioContext = new AudioContextClass();
                     }
-                    const buffer = ctx.createBuffer(1, 1, 22050);
-                    const source = ctx.createBufferSource();
-                    source.buffer = buffer;
-                    source.connect(ctx.destination);
-                    source.start(0);
-                    audioHardwareWarmed = true;
+                    if (sharedAudioContext.state === 'suspended') {
+                        sharedAudioContext.resume();
+                    }
                 }
             } catch (e) {
-                // Fallback for sandboxed web environments
+                // AudioContext fallback
             }
         }
-        
+
         // Pre-buffers audio file headers on mouse hover or touch start
         function preloadAudioStream(button) {
             const audioUrl = button.getAttribute('data-audio-src');
-            if (!audioUrl || globalAudioPlayer.src === audioUrl) return;
-        
+            if (!audioUrl || (globalAudioPlayer && globalAudioPlayer.src === audioUrl)) return;
+
             let prefetch = document.getElementById('stream-prefetch');
             if (!prefetch) {
                 prefetch = document.createElement('link');
@@ -570,57 +564,66 @@
             }
             prefetch.href = audioUrl;
         }
-        
+
         function toggleStream(button) {
             warmAudioHardware();
-        
+
             const audioUrl = button.getAttribute('data-audio-src');
-        
+
             // Case 1: Stop current track
             if (activeStreamButton === button) {
                 stopCurrentTrack();
                 return;
             }
-        
-            // Case 2: Reset previously playing track
+
+            // Case 2: Reset and tear down previous track completely
             if (activeStreamButton) {
                 stopCurrentTrack();
             }
-        
-            // Case 3: Load and play new track from exact 0.0
-            globalAudioPlayer.src = audioUrl;
-        
-            const onMetadataReady = () => {
-                globalAudioPlayer.currentTime = 0;
-                globalAudioPlayer.removeEventListener('loadedmetadata', onMetadataReady);
-            };
-            globalAudioPlayer.addEventListener('loadedmetadata', onMetadataReady);
-        
-            globalAudioPlayer.play().then(() => {
-                activeStreamButton = button;
+
+            // Case 3: Instantiate a completely fresh Audio element for every single play
+            // A new Audio element natively starts at exact 0.000000s without requiring an active seek
+            const player = new Audio();
+            player.preload = "auto";
+            player.src = audioUrl;
+
+            globalAudioPlayer = player;
+            activeStreamButton = button;
+
+            player.play().then(() => {
                 button.classList.add('playing');
                 button.querySelector('.icon').textContent = '■';
                 button.querySelector('.label').textContent = 'Stop';
             }).catch(err => {
-                console.error("Playback error:", err);
-                alert("Audio stream could not load. Verify your direct audio raw=1 link.");
+                // Ignore silent abort errors if user rapidly clicked Stop
+                if (err.name !== 'AbortError') {
+                    console.error("Playback error:", err);
+                    stopCurrentTrack();
+                    alert("Audio stream could not load. Verify your direct audio raw=1 link.");
+                }
+            });
+
+            // Auto-reset when track finishes
+            player.addEventListener('ended', () => {
+                stopCurrentTrack();
             });
         }
-        
+
         function stopCurrentTrack() {
-            if (!activeStreamButton) return;
-            globalAudioPlayer.pause();
-            globalAudioPlayer.currentTime = 0;
-            
-            activeStreamButton.classList.remove('playing');
-            activeStreamButton.querySelector('.icon').textContent = '▶';
-            activeStreamButton.querySelector('.label').textContent = 'Play';
-            activeStreamButton = null;
+            if (globalAudioPlayer) {
+                globalAudioPlayer.pause();
+                globalAudioPlayer.removeAttribute('src'); // Detach audio pipeline
+                globalAudioPlayer.load();               // Release demuxer memory immediately
+                globalAudioPlayer = null;
+            }
+
+            if (activeStreamButton) {
+                activeStreamButton.classList.remove('playing');
+                activeStreamButton.querySelector('.icon').textContent = '▶';
+                activeStreamButton.querySelector('.label').textContent = 'Play';
+                activeStreamButton = null;
+            }
         }
-        
-        globalAudioPlayer.addEventListener('ended', () => {
-            stopCurrentTrack();
-        });
 
         /* -------------------------------------------------------------
            6. MODAL CONTROLS
