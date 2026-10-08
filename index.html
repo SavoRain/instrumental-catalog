@@ -43,7 +43,7 @@
         <section class="filter-controls-container" id="filterContainer">
             <div class="filters-card">
                 
-                <!-- Dynamic Collection Dropdown (Hides if no items have collections) -->
+                <!-- Dynamic Collection Dropdown -->
                 <div class="filter-group" id="collectionFilterGroup">
                     <label>Collection</label>
                     <select id="collectionFilter" onchange="applyFilters()">
@@ -51,7 +51,7 @@
                     </select>
                 </div>
 
-                <!-- Dynamic Genre Dropdown (Populates strictly from catalog contents) -->
+                <!-- Dynamic Genre Dropdown -->
                 <div class="filter-group" id="genreFilterGroup">
                     <label>Genre</label>
                     <select id="genreFilter" onchange="applyFilters()">
@@ -108,11 +108,6 @@
                         </thead>
                         <tbody id="instrumentalsBody">
                             
-                            <!-- 
-                              ROW CATALOG DEFINITIONS
-                              Parameters: data-title, data-audio, data-seconds, data-bpm, data-genre, data-style, data-collection, data-status
-                            -->
-
                             <tr data-title="Lucky" 
                                 data-audio="https://www.dropbox.com/scl/fi/eav63390loqo9enyeuj1r/Lucky.wav?rlkey=hifkgz8ngyy41f5bo6beff8b4&st=a484vijh&raw=1" 
                                 data-seconds="149" 
@@ -382,7 +377,6 @@
                     actionButton = `<button class="action-btn inquire" onclick="openInquiryModal('${title.replace(/'/g, "\\'")}')">Inquire</button>`;
                 }
 
-                // Clean button without unmanaged hover preloading
                 row.innerHTML = `
                     <td class="title-cell">${title}</td>
                     <td>
@@ -429,6 +423,8 @@
         window.addEventListener('DOMContentLoaded', () => {
             populateCatalogRows();
             cacheOriginalRowOrder();
+            // Start audio pipe warming on first user tap/click anywhere
+            window.addEventListener('pointerdown', keepAudioHardwareAwake, { once: true });
         });
 
         /* -------------------------------------------------------------
@@ -498,62 +494,128 @@
         }
 
         /* -------------------------------------------------------------
-           5. ZERO-CUTOFF & LEAK-PROOF AUDIO CONTROLLER
-           Instantiates a clean player on every start; frees memory on stop.
-        ------------------------------------------------------------- */
+           5. STAGED BUFFERING & BLUETOOTH KEEP-ALIVE AUDIO CONTROLLER
+           ============================================================= */
         let globalAudioPlayer = null;
         let activeStreamButton = null;
+        let activeLoadToken = 0;
+        let hardwareAudioContext = null;
+
+        // Keeps Bluetooth audio sink (A2DP) permanently unmuted & awake
+        function keepAudioHardwareAwake() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!hardwareAudioContext && AudioCtx) {
+                    hardwareAudioContext = new AudioCtx();
+                    
+                    // Route inaudible zero-level signal to audio destination
+                    const silentGain = hardwareAudioContext.createGain();
+                    silentGain.gain.value = 0.00001; 
+
+                    const osc = hardwareAudioContext.createOscillator();
+                    osc.connect(silentGain);
+                    silentGain.connect(hardwareAudioContext.destination);
+                    osc.start();
+                }
+                if (hardwareAudioContext && hardwareAudioContext.state === 'suspended') {
+                    hardwareAudioContext.resume();
+                }
+            } catch (e) {
+                // AudioContext fallback
+            }
+        }
 
         function toggleStream(button) {
+            keepAudioHardwareAwake();
+
             const audioUrl = button.getAttribute('data-audio-src');
 
-            // Case 1: Stop currently playing track
+            // Case 1: Stop currently playing track or cancel loading track
             if (activeStreamButton === button) {
                 stopCurrentTrack();
                 return;
             }
 
-            // Case 2: Clean up previous track completely
+            // Case 2: Clean up previous track before starting new one
             if (activeStreamButton) {
                 stopCurrentTrack();
             }
 
-            // Case 3: Create a fresh Audio instance (identical to a fresh page load)
-            // Starts naturally at 0.0 with no seek events, no pending seeks, and no anti-pop crossfades
+            // Case 3: Staged load
+            activeStreamButton = button;
+            button.classList.add('loading');
+            button.querySelector('.icon').textContent = '◌';
+            button.querySelector('.label').textContent = 'Loading...';
+
+            const currentToken = ++activeLoadToken;
+
+            // Instantiate clean HTMLAudioElement
             const player = new Audio();
             player.preload = "auto";
             player.src = audioUrl;
-
             globalAudioPlayer = player;
-            activeStreamButton = button;
 
-            button.classList.add('playing');
-            button.querySelector('.icon').textContent = '■';
-            button.querySelector('.label').textContent = 'Stop';
+            let stageStarted = false;
 
-            player.play().catch(err => {
-                if (err.name !== 'AbortError') {
-                    console.error("Playback error:", err);
-                    stopCurrentTrack();
-                    alert("Audio stream could not load. Verify your direct audio raw=1 link.");
-                }
-            });
+            const onPlayerReady = () => {
+                if (stageStarted || currentToken !== activeLoadToken) return;
+                stageStarted = true;
+
+                // Explicitly lock head to 0.0 while still paused
+                player.currentTime = 0;
+
+                // 80ms hardware synchronization window (allows DAC & Bluetooth lock)
+                setTimeout(() => {
+                    if (currentToken !== activeLoadToken) return;
+
+                    player.play().then(() => {
+                        if (currentToken !== activeLoadToken) {
+                            player.pause();
+                            return;
+                        }
+                        button.classList.remove('loading');
+                        button.classList.add('playing');
+                        button.querySelector('.icon').textContent = '■';
+                        button.querySelector('.label').textContent = 'Stop';
+                    }).catch(err => {
+                        if (err.name !== 'AbortError' && currentToken === activeLoadToken) {
+                            console.error("Playback error:", err);
+                            stopCurrentTrack();
+                            alert("Audio stream could not load. Verify your direct audio link.");
+                        }
+                    });
+                }, 80);
+            };
+
+            // Wait until data frames arrive
+            player.addEventListener('canplay', onPlayerReady, { once: true });
+            player.addEventListener('canplaythrough', onPlayerReady, { once: true });
+
+            // If browser has already cached metadata
+            if (player.readyState >= 3) {
+                onPlayerReady();
+            }
 
             player.addEventListener('ended', () => {
-                stopCurrentTrack();
+                if (currentToken === activeLoadToken) {
+                    stopCurrentTrack();
+                }
             });
         }
 
         function stopCurrentTrack() {
+            activeLoadToken++; // Invalidate pending callbacks
+
             if (globalAudioPlayer) {
                 globalAudioPlayer.pause();
-                globalAudioPlayer.removeAttribute('src'); // Instantly aborts network stream
-                globalAudioPlayer.load();                 // Flushes demuxer & decoder memory
+                globalAudioPlayer.removeAttribute('src');
+                globalAudioPlayer.load();
                 globalAudioPlayer = null;
             }
 
             if (activeStreamButton) {
                 activeStreamButton.classList.remove('playing');
+                activeStreamButton.classList.remove('loading');
                 activeStreamButton.querySelector('.icon').textContent = '▶';
                 activeStreamButton.querySelector('.label').textContent = 'Play';
                 activeStreamButton = null;
