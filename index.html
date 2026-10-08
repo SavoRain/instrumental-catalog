@@ -108,21 +108,10 @@
                         </thead>
                         <tbody id="instrumentalsBody">
                             
-                            <!-- =========================================================================
-                              HOW TO ADD & EDIT BEATS:
-                              1. Create a single <tr ...> tag with the attributes below. Leave the tag completely empty.
-                              2. Parameters:
-                                 - data-title: The beat's display name.
-                                 - data-seconds: Total track duration in seconds (formatted as [mm:ss] automatically).
-                                 - data-bpm: Tempo number.
-                                 - data-genre: Single genre or comma-separated list (e.g. "Hip-Hop, Trap, Drill").
-                                 - data-style: Single style or comma-separated list (e.g. "Chill, Dark, Melodic").
-                                 - data-collection: Name of collection/series (e.g. "Vault Vol. 1") or "null" if standalone.
-                                 - data-status: 
-                                     * "available"      -> Green badge + Inquire button
-                                     * "special"        -> Shiny animated gold badge + Inquire button
-                                     * "exclusive-sold" -> Red badge + Disabled "Sold Out" button
-                              ========================================================================= -->
+                            <!-- 
+                              ROW CATALOG DEFINITIONS
+                              Parameters: data-title, data-audio, data-seconds, data-bpm, data-genre, data-style, data-collection, data-status
+                            -->
 
                             <tr data-title="Lucky" 
                                 data-audio="https://www.dropbox.com/scl/fi/eav63390loqo9enyeuj1r/Lucky.wav?rlkey=hifkgz8ngyy41f5bo6beff8b4&st=a484vijh&raw=1" 
@@ -260,7 +249,7 @@
         <p>&copy; 2026 SavoRain. All rights reserved. Master rights retained by producer.</p>
     </footer>
 
-    <!-- MODAL: LEASING & PURCHASE GUIDE (PRICING REFERENCE TABLE) -->
+    <!-- MODAL: LEASING & PURCHASE GUIDE -->
     <div id="guideModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
@@ -361,26 +350,21 @@
                 const collection = row.getAttribute('data-collection');
                 const status = (row.getAttribute('data-status') || 'available').toLowerCase();
 
-                // Collect unique genres
                 if (genreRaw) {
                     genreRaw.split(',').map(g => g.trim()).filter(Boolean).forEach(g => genreSet.add(g));
                 }
 
-                // Collect unique collections
                 if (collection && collection !== 'null' && collection.trim() !== '') {
                     collectionSet.add(collection.trim());
                 }
 
-                // Format duration into [mm:ss]
                 const minutes = Math.floor(totalSeconds / 60);
                 const remainingSeconds = totalSeconds % 60;
                 const formattedTime = `[${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}]`;
 
-                // Build Collection cell display
                 const hasCollection = collection && collection !== 'null' && collection.trim() !== '';
                 const collectionDisplay = hasCollection ? collection : '—';
 
-                // Status formatting
                 let statusBadge = '';
                 let actionButton = '';
 
@@ -398,14 +382,11 @@
                     actionButton = `<button class="action-btn inquire" onclick="openInquiryModal('${title.replace(/'/g, "\\'")}')">Inquire</button>`;
                 }
 
-                // Inject markup into row
+                // Clean button without unmanaged hover preloading
                 row.innerHTML = `
                     <td class="title-cell">${title}</td>
                     <td>
-                        <button class="stream-btn" data-audio-src="${audioSrc}" 
-                                onmouseenter="preloadAudioStream(this)" 
-                                ontouchstart="preloadAudioStream(this)" 
-                                onclick="toggleStream(this)">
+                        <button class="stream-btn" data-audio-src="${audioSrc}" onclick="toggleStream(this)">
                             <span class="icon">▶</span> <span class="label">Play</span>
                         </button>
                     </td>
@@ -419,7 +400,6 @@
                 `;
             });
 
-            // Dynamically populate Genre Filter dropdown
             const genreDropdown = document.getElementById('genreFilter');
             genreDropdown.innerHTML = '<option value="all">All Genres</option>';
             Array.from(genreSet).sort().forEach(g => {
@@ -429,13 +409,11 @@
                 genreDropdown.appendChild(opt);
             });
 
-            // Dynamically populate Collection Filter dropdown
             const collectionDropdown = document.getElementById('collectionFilter');
             const collectionGroup = document.getElementById('collectionFilterGroup');
             collectionDropdown.innerHTML = '<option value="all">All Collections</option>';
 
             if (collectionSet.size === 0) {
-                // Hide collection filter group entirely if no beats belong to a collection
                 collectionGroup.style.display = 'none';
             } else {
                 collectionGroup.style.display = 'flex';
@@ -448,7 +426,6 @@
             }
         }
 
-        // Initialize on DOM load
         window.addEventListener('DOMContentLoaded', () => {
             populateCatalogRows();
             cacheOriginalRowOrder();
@@ -493,16 +470,12 @@
                 const rowCol = row.getAttribute('data-collection');
                 const rowStatus = (row.getAttribute('data-status') || '').toLowerCase();
 
-                // Genre matching (checks if array contains selected genre)
                 let matchesGenre = (selectedGenre === 'all' || rowGenres.includes(selectedGenre));
-                
-                // Collection matching
                 let matchesCollection = true;
                 if (selectedCollection !== 'all') {
                     matchesCollection = (rowCol !== null && rowCol !== 'null' && rowCol === selectedCollection);
                 }
 
-                // Sold beats toggle
                 let matchesSold = true;
                 if (!showSold && (rowStatus === 'exclusive-sold' || rowStatus === 'sold')) {
                     matchesSold = false;
@@ -515,7 +488,6 @@
                 }
             });
 
-            // Length sorting
             if (lengthSort === 'shortest') {
                 rows.sort((a, b) => parseInt(a.getAttribute('data-seconds')) - parseInt(b.getAttribute('data-seconds')));
             } else if (lengthSort === 'longest') {
@@ -525,44 +497,14 @@
             rows.forEach(r => tbody.appendChild(r));
         }
 
-        /* =============================================================
-           5. OPTIMIZED AUDIO STREAM CONTROLLER (CACHE-SAFE & ZERO CUTOFF)
-           ============================================================= */
-        const globalAudioPlayer = new Audio();
-        globalAudioPlayer.preload = "auto";
+        /* -------------------------------------------------------------
+           5. ZERO-CUTOFF & LEAK-PROOF AUDIO CONTROLLER
+           Instantiates a clean player on every start; frees memory on stop.
+        ------------------------------------------------------------- */
+        let globalAudioPlayer = null;
         let activeStreamButton = null;
-        let persistentAudioContext = null;
-
-        // Keeps hardware DAC permanently awake across all track transitions
-        function warmAudioHardware() {
-            try {
-                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                if (!persistentAudioContext && AudioContextClass) {
-                    persistentAudioContext = new AudioContextClass();
-                }
-                if (persistentAudioContext && persistentAudioContext.state === 'suspended') {
-                    persistentAudioContext.resume();
-                }
-            } catch (e) {
-                // AudioContext fallback
-            }
-        }
-
-        // Pre-buffers audio file headers on hover or touch using a matching media pipeline
-        const preloadCache = new Set();
-        function preloadAudioStream(button) {
-            const audioUrl = button.getAttribute('data-audio-src');
-            if (!audioUrl || globalAudioPlayer.src === audioUrl || preloadCache.has(audioUrl)) return;
-
-            preloadCache.add(audioUrl);
-            const preloader = new Audio();
-            preloader.preload = "auto";
-            preloader.src = audioUrl;
-        }
 
         function toggleStream(button) {
-            warmAudioHardware();
-
             const audioUrl = button.getAttribute('data-audio-src');
 
             // Case 1: Stop currently playing track
@@ -571,49 +513,53 @@
                 return;
             }
 
-            // Case 2: Reset previously playing track
+            // Case 2: Clean up previous track completely
             if (activeStreamButton) {
                 stopCurrentTrack();
             }
 
-            // Case 3: Play track from exact 0.0 without post-start seek glitch
-            if (globalAudioPlayer.src !== audioUrl) {
-                globalAudioPlayer.src = audioUrl;
-            } else {
-                // Already has this source loaded: seek only while paused before playback starts
-                globalAudioPlayer.currentTime = 0;
-            }
+            // Case 3: Create a fresh Audio instance (identical to a fresh page load)
+            // Starts naturally at 0.0 with no seek events, no pending seeks, and no anti-pop crossfades
+            const player = new Audio();
+            player.preload = "auto";
+            player.src = audioUrl;
 
+            globalAudioPlayer = player;
             activeStreamButton = button;
+
             button.classList.add('playing');
             button.querySelector('.icon').textContent = '■';
             button.querySelector('.label').textContent = 'Stop';
 
-            globalAudioPlayer.play().catch(err => {
+            player.play().catch(err => {
                 if (err.name !== 'AbortError') {
                     console.error("Playback error:", err);
                     stopCurrentTrack();
                     alert("Audio stream could not load. Verify your direct audio raw=1 link.");
                 }
             });
+
+            player.addEventListener('ended', () => {
+                stopCurrentTrack();
+            });
         }
 
         function stopCurrentTrack() {
-            if (!activeStreamButton) return;
+            if (globalAudioPlayer) {
+                globalAudioPlayer.pause();
+                globalAudioPlayer.removeAttribute('src'); // Instantly aborts network stream
+                globalAudioPlayer.load();                 // Flushes demuxer & decoder memory
+                globalAudioPlayer = null;
+            }
 
-            globalAudioPlayer.pause();
-            globalAudioPlayer.currentTime = 0;
-
-            activeStreamButton.classList.remove('playing');
-            activeStreamButton.querySelector('.icon').textContent = '▶';
-            activeStreamButton.querySelector('.label').textContent = 'Play';
-            activeStreamButton = null;
+            if (activeStreamButton) {
+                activeStreamButton.classList.remove('playing');
+                activeStreamButton.querySelector('.icon').textContent = '▶';
+                activeStreamButton.querySelector('.label').textContent = 'Play';
+                activeStreamButton = null;
+            }
         }
 
-        globalAudioPlayer.addEventListener('ended', () => {
-            stopCurrentTrack();
-        });
-        
         /* -------------------------------------------------------------
            6. MODAL CONTROLS
         ------------------------------------------------------------- */
