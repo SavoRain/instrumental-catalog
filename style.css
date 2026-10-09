@@ -654,3 +654,25 @@ audio {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+
+/* =============================================================
+   HERO BUTTONS ALIGNMENT
+   ============================================================= */
+.hero-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 45px;
+}
+
+/* =============================================================
+   GREY "SAMPLE" STATUS BADGE
+   ============================================================= */
+.badge.sample {
+    background: rgba(255, 255, 255, 0.08);
+    color: #8e94a5;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
