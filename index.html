@@ -34,9 +34,10 @@
 
     <main class="main-wrapper">
         
-        <!-- HERO / PRICING GUIDE ACTION -->
+        <!-- HERO / ACTION BUTTONS -->
         <section class="hero-section">
             <button id="openGuideBtn" class="glow-button">Leasing / Purchase Guide</button>
+            <button id="openCustomBtn" class="glow-button">Custom Instrumentals</button>
         </section>
 
         <!-- CONTROLS: DYNAMIC FILTER BAR -->
@@ -59,6 +60,14 @@
                     </select>
                 </div>
 
+                <!-- Dynamic Style Dropdown -->
+                <div class="filter-group" id="styleFilterGroup">
+                    <label>Style</label>
+                    <select id="styleFilter" onchange="applyFilters()">
+                        <option value="all">All Styles</option>
+                    </select>
+                </div>
+
                 <!-- Sort Control -->
                 <div class="filter-group">
                     <label>Sort By Length</label>
@@ -74,6 +83,15 @@
                     <label>Show Sold Beats</label>
                     <label class="switch">
                         <input type="checkbox" id="soldToggle" checked onchange="applyFilters()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Toggle Sample Beats -->
+                <div class="filter-group toggle-group">
+                    <label>Show Samples</label>
+                    <label class="switch">
+                        <input type="checkbox" id="sampleToggle" checked onchange="applyFilters()">
                         <span class="slider"></span>
                     </label>
                 </div>
@@ -108,13 +126,39 @@
                         </thead>
                         <tbody id="instrumentalsBody">
                             
-                            <tr data-title="Lucky" 
+                            <!-- =========================================================================
+                              ROW CATALOG DEFINITIONS
+                              Parameters: 
+                              - data-title: Song title
+                              - data-audio: Direct Dropbox stream link (&raw=1)
+                              - data-seconds: Duration in seconds
+                              - data-bpm: Track BPM
+                              - data-genre: Comma-separated genre list
+                              - data-style: Comma-separated style list
+                              - data-collection: Collection name or "null"
+                              - data-status: 
+                                  * "available"      -> Green badge + Inquire button
+                                  * "special"        -> Metallic gold badge + Inquire button
+                                  * "sample"         -> Grey badge + Not for sale (no inquiry button)
+                                  * "exclusive-sold" -> Red badge + Sold Out button
+                              ========================================================================= -->
+
+                           <tr data-title="Lucky" 
                                 data-audio="https://www.dropbox.com/scl/fi/eav63390loqo9enyeuj1r/Lucky.wav?rlkey=hifkgz8ngyy41f5bo6beff8b4&st=a484vijh&raw=1" 
                                 data-seconds="149" 
                                 data-bpm="186" 
                                 data-genre="Hip-Hop" 
                                 data-style="Chill" 
                                 data-collection="null" 
+                                data-status="available"></tr>
+
+                            <tr data-title="Logos" 
+                                data-audio="https://www.dropbox.com/scl/fi/fyou6zg394t4320ybkr6v/Logos.wav?rlkey=fl9237bhv1c7f55jfmnbjtrjz&st=dsu1pbbx&raw=1" 
+                                data-seconds="183" 
+                                data-bpm="157" 
+                                data-genre="Hip-Hop" 
+                                data-style="Misc" 
+                                data-collection="NewGen" 
                                 data-status="available"></tr>
                             
                             <tr data-title="Young" 
@@ -125,6 +169,15 @@
                                 data-style="Flow" 
                                 data-collection="NewGen" 
                                 data-status="available"></tr>
+
+                            <tr data-title="Chop Block" 
+                                data-audio="https://www.dropbox.com/scl/fi/i3i7h18wtwbbi3lnwkvui/Chop.wav?rlkey=wrl5auhi2ywglt1uviasu9377&st=h13muol9&raw=1" 
+                                data-seconds="206" 
+                                data-bpm="113" 
+                                data-genre="Hip-Hop" 
+                                data-style="Abstract" 
+                                data-collection="Clockwork" 
+                                data-status="special"></tr>
                             
                             <tr data-title="Craft" 
                                 data-audio="https://www.dropbox.com/scl/fi/sl4ocmsfrvbd9qyo3kb2c/Craft.wav?rlkey=rae4jiqpnab1t415jk9u82syu&st=4j9zt8i7&raw=1" 
@@ -133,7 +186,7 @@
                                 data-genre="Hip-Hop" 
                                 data-style="Hard" 
                                 data-collection="Knockers" 
-                                data-status="special"></tr>
+                                data-status="available"></tr>
                             
                             <tr data-title="Garden" 
                                 data-audio="https://www.dropbox.com/scl/fi/to20z8o0nlcrr1q21e2gw/Garden.wav?rlkey=e1ryyvy7bmbi0hhqmgo4k7uvy&st=k0rsyxe9&raw=1" 
@@ -152,6 +205,15 @@
                                 data-style="Chill, Upbeat" 
                                 data-collection="Morning Dew" 
                                 data-status="available"></tr>
+
+                            <tr data-title="Flashback" 
+                                data-audio="https://www.dropbox.com/scl/fi/83djixw4oqr5lgki2dwvl/Flashback.wav?rlkey=bw5pqkxywww2ewva6xox8jjxo&st=uy121kan&raw=1" 
+                                data-seconds="226" 
+                                data-bpm="146" 
+                                data-genre="Reggae-Hop" 
+                                data-style="Ethereal, Chill" 
+                                data-collection="Extra Terrestrial" 
+                                data-status="special"></tr>
                             
                             <tr data-title="Boomer" 
                                 data-audio="https://www.dropbox.com/scl/fi/53o3hz5ibwf6zav437zxu/Boomer.wav?rlkey=0v9ls8wvo4ywsnsm8i0l55bdd&st=zafcbcvt&raw=1" 
@@ -161,6 +223,15 @@
                                 data-style="Flow, Simple" 
                                 data-collection="null" 
                                 data-status="available"></tr>
+
+                            <tr data-title="I wish I met you sooner" 
+                                data-audio="https://www.dropbox.com/scl/fi/bykx8n4ps2fj1t8z3olik/I-wish-I-met-you-sooner.wav?rlkey=5vey6vjmz1d7rf8tnavz73r4x&st=s783hd37&raw=1" 
+                                data-seconds="240" 
+                                data-bpm="128" 
+                                data-genre="Alternative" 
+                                data-style="Ethereal" 
+                                data-collection="Extra Terrestrial" 
+                                data-status="sample"></tr>
                             
                             <tr data-title="Boon" 
                                 data-audio="https://www.dropbox.com/scl/fi/b5e0vs9zpcycchqb4egbn/Boon.wav?rlkey=zv4o8sgfb3qfo5ryrbw4xjjld&st=042xx9oe&raw=1" 
@@ -197,6 +268,15 @@
                                 data-style="Hard" 
                                 data-collection="Knockers" 
                                 data-status="available"></tr>
+
+                            <tr data-title="Quandale" 
+                                data-audio="https://www.dropbox.com/scl/fi/kfgkfck8esv52tr1brmrz/Scavenger.wav?rlkey=ocj5mzqkl829cg4hw4xrpjk0t&st=khhgrk31&raw=1" 
+                                data-seconds="157" 
+                                data-bpm="134" 
+                                data-genre="Hip-Hop" 
+                                data-style="Piano, Tuff" 
+                                data-collection="Knockers" 
+                                data-status="available"></tr>
                             
                             <tr data-title="Shimmer" 
                                 data-audio="https://www.dropbox.com/scl/fi/6n8gz8toju5ftfeonotnf/Shimmer.wav?rlkey=ipi3oc1p5dk4c34aj3xk5z02d&st=10h9qpjz&raw=1" 
@@ -214,6 +294,60 @@
                                 data-genre="Hip-Hop" 
                                 data-style="Misc" 
                                 data-collection="Castles" 
+                                data-status="available"></tr>
+
+                            <tr data-title="Scope" 
+                                data-audio="https://www.dropbox.com/scl/fi/axsqinuzdj1ps3v0ec9co/Scope.wav?rlkey=2khnb20fo0pxh4mh3iao8sa2x&st=1pv6rfef&raw=1" 
+                                data-seconds="274" 
+                                data-bpm="84" 
+                                data-genre="Hip-Hop" 
+                                data-style="Flow, Hard" 
+                                data-collection="Runners" 
+                                data-status="available"></tr>
+
+                            <tr data-title="True!" 
+                                data-audio="https://www.dropbox.com/scl/fi/r5qhn3ojbkz1hk5uyhxhm/True.wav?rlkey=fjqaiuak8z2woqeupwup3pall&st=bvr0wgzt&raw=1" 
+                                data-seconds="202" 
+                                data-bpm="152" 
+                                data-genre="Hip-Hop" 
+                                data-style="Flow" 
+                                data-collection="NewGen" 
+                                data-status="available"></tr>
+
+                            <tr data-title="Cure Me" 
+                                data-audio="https://www.dropbox.com/scl/fi/qymv4vt3lbv745a5ymgmz/Cure-Me.wav?rlkey=zbdnt0siaq3wkrd7nvmdkmcp6&st=o6g63387&raw=1" 
+                                data-seconds="170" 
+                                data-bpm="152" 
+                                data-genre="Hip-Hop" 
+                                data-style="Chill" 
+                                data-collection="Clockwork" 
+                                data-status="available"></tr>
+
+                            <tr data-title="SUBLIMA" 
+                                data-audio="https://www.dropbox.com/scl/fi/pg8nlfczcliiylnp1d51r/SUBLIMA.wav?rlkey=d70exg33wlmkomeiegma17c6d&st=iaqwm9mx&raw=1" 
+                                data-seconds="131" 
+                                data-bpm="117" 
+                                data-genre="Funk (Latin)" 
+                                data-style="Hard, Club" 
+                                data-collection="null" 
+                                data-status="sample"></tr>
+
+                            <tr data-title="Swear" 
+                                data-audio="https://www.dropbox.com/scl/fi/oc20l99cmrmkmvp4k8l91/Swear.wav?rlkey=xc783lg07z95fwamzhsrgas8p&st=0xtw66kq&raw=1" 
+                                data-seconds="170" 
+                                data-bpm="152" 
+                                data-genre="Hip-Hop" 
+                                data-style="Chill" 
+                                data-collection="Clockwork" 
+                                data-status="available"></tr>
+
+                            <tr data-title="Wish" 
+                                data-audio="https://www.dropbox.com/scl/fi/vnucdwn8gfcf9u4vht267/Wish.wav?rlkey=18f46c9ckwaymvj5q8lc2eo6b&st=qlzr1p9r&raw=1" 
+                                data-seconds="160" 
+                                data-bpm="156" 
+                                data-genre="Rage, Hip-Hop" 
+                                data-style="Hard" 
+                                data-collection="Deep Pit" 
                                 data-status="available"></tr>
 
                         </tbody>
@@ -302,6 +436,48 @@
         </div>
     </div>
 
+    <!-- MODAL: CUSTOM INSTRUMENTALS -->
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div>
+                    <h2>Custom Instrumentals</h2>
+                    <p class="modal-subtitle">Instrumental Pricing Reference -</p>
+                </div>
+                <button class="modal-close-btn" onclick="closeCustomModal()">&times;</button>
+            </div>
+            
+            <div class="table-responsive modal-table-wrap">
+                <table class="reference-table">
+                    <thead>
+                        <tr>
+                            <th>Option</th>
+                            <th>Pricing / Rate</th>
+                            <th>Details & Deliverables</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Hourly Pricing</strong></td>
+                            <td>$40/hr</td>
+                            <td>Live session (Pay based on exact minutes)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Track Pricing</strong></td>
+                            <td>$10/track</td>
+                            <td>Free file delivery and full ownership</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Negotiation</strong></td>
+                            <td>Custom Fee</td>
+                            <td>Regular pricing with custom fee</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: INQUIRY POPUP -->
     <div id="inquiryModal" class="modal-overlay">
         <div class="modal-card compact">
@@ -333,6 +509,7 @@
         function populateCatalogRows() {
             const rows = document.querySelectorAll('#instrumentalsBody tr');
             const genreSet = new Set();
+            const styleSet = new Set();
             const collectionSet = new Set();
 
             rows.forEach(row => {
@@ -347,6 +524,10 @@
 
                 if (genreRaw) {
                     genreRaw.split(',').map(g => g.trim()).filter(Boolean).forEach(g => genreSet.add(g));
+                }
+
+                if (styleRaw) {
+                    styleRaw.split(',').map(s => s.trim()).filter(Boolean).forEach(s => styleSet.add(s));
                 }
 
                 if (collection && collection !== 'null' && collection.trim() !== '') {
@@ -369,6 +550,9 @@
                 } else if (status === 'special') {
                     statusBadge = '<span class="badge special">Special</span>';
                     actionButton = `<button class="action-btn inquire" onclick="openInquiryModal('${title.replace(/'/g, "\\'")}')">Inquire</button>`;
+                } else if (status === 'sample') {
+                    statusBadge = '<span class="badge sample">Sample</span>';
+                    actionButton = '<span class="sold-text">Not For Sale</span>';
                 } else if (status === 'exclusive-sold' || status === 'sold') {
                     statusBadge = '<span class="badge sold">Exclusive Sold</span>';
                     actionButton = '<button class="action-btn sold" disabled>Sold Out</button>';
@@ -394,6 +578,7 @@
                 `;
             });
 
+            // Populate Genre Dropdown
             const genreDropdown = document.getElementById('genreFilter');
             genreDropdown.innerHTML = '<option value="all">All Genres</option>';
             Array.from(genreSet).sort().forEach(g => {
@@ -403,10 +588,26 @@
                 genreDropdown.appendChild(opt);
             });
 
+            // Populate Style Dropdown
+            const styleDropdown = document.getElementById('styleFilter');
+            const styleGroup = document.getElementById('styleFilterGroup');
+            styleDropdown.innerHTML = '<option value="all">All Styles</option>';
+            if (styleSet.size === 0) {
+                styleGroup.style.display = 'none';
+            } else {
+                styleGroup.style.display = 'flex';
+                Array.from(styleSet).sort().forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s;
+                    opt.textContent = s;
+                    styleDropdown.appendChild(opt);
+                });
+            }
+
+            // Populate Collection Dropdown
             const collectionDropdown = document.getElementById('collectionFilter');
             const collectionGroup = document.getElementById('collectionFilterGroup');
             collectionDropdown.innerHTML = '<option value="all">All Collections</option>';
-
             if (collectionSet.size === 0) {
                 collectionGroup.style.display = 'none';
             } else {
@@ -423,7 +624,6 @@
         window.addEventListener('DOMContentLoaded', () => {
             populateCatalogRows();
             cacheOriginalRowOrder();
-            // Start audio pipe warming on first user tap/click anywhere
             window.addEventListener('pointerdown', keepAudioHardwareAwake, { once: true });
         });
 
@@ -453,8 +653,10 @@
 
         function applyFilters() {
             const selectedGenre = document.getElementById('genreFilter').value;
+            const selectedStyle = document.getElementById('styleFilter').value;
             const selectedCollection = document.getElementById('collectionFilter').value;
             const showSold = document.getElementById('soldToggle').checked;
+            const showSamples = document.getElementById('sampleToggle').checked;
             const lengthSort = document.getElementById('lengthSort').value;
             const tbody = document.getElementById('instrumentalsBody');
 
@@ -463,10 +665,16 @@
             rows.forEach(row => {
                 const genreRaw = row.getAttribute('data-genre') || '';
                 const rowGenres = genreRaw.split(',').map(g => g.trim()).filter(Boolean);
+                
+                const styleRaw = row.getAttribute('data-style') || '';
+                const rowStyles = styleRaw.split(',').map(s => s.trim()).filter(Boolean);
+
                 const rowCol = row.getAttribute('data-collection');
                 const rowStatus = (row.getAttribute('data-status') || '').toLowerCase();
 
                 let matchesGenre = (selectedGenre === 'all' || rowGenres.includes(selectedGenre));
+                let matchesStyle = (selectedStyle === 'all' || rowStyles.includes(selectedStyle));
+                
                 let matchesCollection = true;
                 if (selectedCollection !== 'all') {
                     matchesCollection = (rowCol !== null && rowCol !== 'null' && rowCol === selectedCollection);
@@ -477,7 +685,12 @@
                     matchesSold = false;
                 }
 
-                if (matchesGenre && matchesCollection && matchesSold) {
+                let matchesSample = true;
+                if (!showSamples && rowStatus === 'sample') {
+                    matchesSample = false;
+                }
+
+                if (matchesGenre && matchesStyle && matchesCollection && matchesSold && matchesSample) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
@@ -501,14 +714,11 @@
         let activeLoadToken = 0;
         let hardwareAudioContext = null;
 
-        // Keeps Bluetooth audio sink (A2DP) permanently unmuted & awake
         function keepAudioHardwareAwake() {
             try {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
                 if (!hardwareAudioContext && AudioCtx) {
                     hardwareAudioContext = new AudioCtx();
-                    
-                    // Route inaudible zero-level signal to audio destination
                     const silentGain = hardwareAudioContext.createGain();
                     silentGain.gain.value = 0.00001; 
 
@@ -530,18 +740,15 @@
 
             const audioUrl = button.getAttribute('data-audio-src');
 
-            // Case 1: Stop currently playing track or cancel loading track
             if (activeStreamButton === button) {
                 stopCurrentTrack();
                 return;
             }
 
-            // Case 2: Clean up previous track before starting new one
             if (activeStreamButton) {
                 stopCurrentTrack();
             }
 
-            // Case 3: Staged load
             activeStreamButton = button;
             button.classList.add('loading');
             button.querySelector('.icon').textContent = '◌';
@@ -549,7 +756,6 @@
 
             const currentToken = ++activeLoadToken;
 
-            // Instantiate clean HTMLAudioElement
             const player = new Audio();
             player.preload = "auto";
             player.src = audioUrl;
@@ -561,10 +767,8 @@
                 if (stageStarted || currentToken !== activeLoadToken) return;
                 stageStarted = true;
 
-                // Explicitly lock head to 0.0 while still paused
                 player.currentTime = 0;
 
-                // 80ms hardware synchronization window (allows DAC & Bluetooth lock)
                 setTimeout(() => {
                     if (currentToken !== activeLoadToken) return;
 
@@ -587,11 +791,9 @@
                 }, 80);
             };
 
-            // Wait until data frames arrive
             player.addEventListener('canplay', onPlayerReady, { once: true });
             player.addEventListener('canplaythrough', onPlayerReady, { once: true });
 
-            // If browser has already cached metadata
             if (player.readyState >= 3) {
                 onPlayerReady();
             }
@@ -604,7 +806,7 @@
         }
 
         function stopCurrentTrack() {
-            activeLoadToken++; // Invalidate pending callbacks
+            activeLoadToken++;
 
             if (globalAudioPlayer) {
                 globalAudioPlayer.pause();
@@ -626,6 +828,7 @@
            6. MODAL CONTROLS
         ------------------------------------------------------------- */
         const guideModal = document.getElementById('guideModal');
+        const customModal = document.getElementById('customModal');
         const inquiryModal = document.getElementById('inquiryModal');
 
         document.getElementById('openGuideBtn').addEventListener('click', () => {
@@ -634,6 +837,14 @@
 
         function closeGuideModal() {
             guideModal.classList.remove('active');
+        }
+
+        document.getElementById('openCustomBtn').addEventListener('click', () => {
+            customModal.classList.add('active');
+        });
+
+        function closeCustomModal() {
+            customModal.classList.remove('active');
         }
 
         function openInquiryModal(trackTitle) {
@@ -647,6 +858,7 @@
 
         window.addEventListener('click', (e) => {
             if (e.target === guideModal) closeGuideModal();
+            if (e.target === customModal) closeCustomModal();
             if (e.target === inquiryModal) closeInquiryModal();
         });
 
